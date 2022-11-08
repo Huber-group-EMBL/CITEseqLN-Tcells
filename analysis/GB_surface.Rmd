@@ -1,0 +1,132 @@
+---
+title: "Run GB on Combined T cells - surface"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  rmdformats::readthedown: 
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Load packages
+```{r Load packages and functions}
+
+library(Seurat)
+library(tidyverse)
+library(caret)
+library(rsample)
+source("R/Functions.R")
+
+```
+
+# Read data
+```{r read data, fig.width=4, fig.height=4}
+
+sobj <- readRDS("output/Tcells_Integrated.rds")
+sobj$IdentI <- factor(sobj$IdentI, levels = sobj$IdentI %>% unique %>% sort())
+
+Idents(sobj) <- "IdentI"
+DimPlot(sobj, label = T, reduction = "wnn.umap", raster = TRUE, 
+        raster.dpi = c(500,500), group.by = "IdentI")+
+  NoLegend()
+
+```
+
+# Split data using rsample package
+```{r split data}
+
+set.seed(1)
+split <- sobj@assays$integratedADT@scale.data %>% t %>% data.frame() %>% 
+  cbind(., FetchData(sobj, vars = c("IdentI"))) %>% 
+  select(-IdentI) %>% 
+  initial_split(prop = 0.35)
+
+train <- training(split) %>% as.matrix()
+test <- testing(split) %>% as.matrix()
+  
+classes_split <- initial_split(as_tibble(Idents(sobj)), prop = 0.35)
+classes_split[["in_id"]] <- split[["in_id"]] # Ensures corresponding celltypes
+classes_training <- training(classes_split) %>% .$value %>% as.factor()
+classes_test  <- testing(classes_split) %>% .$value %>% as.factor()
+  
+# Ensure all classes are represented
+all(levels(classes_training) == levels(classes_test))
+
+```
+
+# Train model
+```{r train model, message=FALSE, warning=FALSE, results='hide'}
+
+trControl <- trainControl(method = "cv", number = 10, allowParallel = TRUE,
+                          search = "random", verboseIter = FALSE)
+  
+set.seed(23)
+gb_fit <- train(x = train,
+                y = classes_training,
+                method = "xgbTree",
+                importance = TRUE,
+                metric = "Accuracy",
+                maximize = TRUE,
+                trControl = trControl)
+
+```
+
+# Print model
+```{r print model}
+
+print(gb_fit)
+
+```
+
+# Predict
+```{r predict model}
+
+predict_test <- predict(gb_fit, newdata = test)
+
+confusionMatrix(predict_test, classes_test)
+
+```
+
+# Store classes
+```{r store classes}
+
+names(classes_training) <- rownames(train)
+names(classes_test) <- rownames(test)
+names(predict_test) <- rownames(test)
+classes <- list(classes_training, classes_test, predict_test)
+names(classes) <- c("train", "test", "predict")
+
+```
+
+# Show most important markers
+```{r important markers}
+
+varImp(gb_fit, scale = TRUE, top=40)
+
+```
+
+# Save objects
+```{r save}
+
+saveRDS(gb_fit, file = "output/GBresults_Combined_T_surface.rds")
+saveRDS(classes, file = "output/GBclasses_Combined_T_surface.rds")
+
+```
+
+# Session info
+```{r session info}
+
+sessionInfo()
+
+```

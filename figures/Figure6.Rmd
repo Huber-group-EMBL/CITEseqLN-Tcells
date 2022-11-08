@@ -1,0 +1,326 @@
+---
+title: "Figure 6"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  rmdformats::readthedown: 
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Read data, functions and packages
+```{r read data}
+
+source("R/ReadPackages.R")
+source("R/Functions.R")
+source("R/ReadData.R")
+source("R/ThemesColors.R")
+source("R/Helpers.R")
+
+```
+
+# Part 1
+## Frequencies
+```{r frequencies treg}
+ 
+df_freq_treg <- df_comb %>% 
+  add_prop(vars = c("PatientID", "Entity", "IdentI"), group.vars = 1) %>% 
+  fill_zeros(values_from = "Prop", names_from = "IdentI") %>% 
+  filter(IdentI %in% c(6,11))
+
+pvalues <- df_freq_treg %>% 
+  group_by(IdentI) %>% 
+  wilcox_test(data=., formula =  Prop ~ Entity, comparisons = list(c("FL", "rLN"), c("MZL", "rLN"))) %>% 
+  select(IdentI, Entity=group1, p) %>% 
+  mutate(p = ifelse(p < 0.001, "< 0.001", as.character(p)))
+
+p1 <- 
+  df_freq_treg %>% 
+  filter(IdentI %in% c(6)) %>% 
+  ggplot(aes(x=Entity, y=100*Prop))+
+  geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
+  ggbeeswarm::geom_beeswarm(size=0.75, shape=21, stroke=0.25, cex = 2.25, aes(fill=Entity))+
+  geom_text(inherit.aes = F, data = pvalues %>% filter(IdentI==6) %>% mutate(Y=c(38,45)),
+            aes(x=Entity, y=Y, label=p), size=2.25)+
+  scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
+  ggtitle(expression('T'[FH]))+
+  scale_y_continuous(limits = c(0,60), name="% of total T-cells (CITE-seq)")+
+  scale_x_discrete(limits=c("rLN", "DLBCL", "MCL", "FL", "MZL"))+
+  mytheme_1+
+  theme(legend.position = "none",
+        strip.background = element_rect(color=NA),
+        axis.title.x = element_blank(),
+        panel.border = element_rect(size=0.5),
+        plot.title = element_text(vjust = -1, color=colors_umap_cl[["6"]]),
+        axis.text.x = element_text(angle=45, hjust = 1),
+        panel.background = element_rect(fill=NA),
+        plot.margin = unit(c(0,0.1,0,0.25), "cm"))+
+  labs(tag = "A")
+
+p2 <- 
+  df_freq_treg %>% 
+  filter(IdentI %in% c(11)) %>% 
+  ggplot(aes(x=Entity, y=100*Prop))+
+  geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
+  ggbeeswarm::geom_beeswarm(size=0.75, shape=21, stroke=0.25, cex = 2.25, aes(fill=Entity))+
+  geom_text(inherit.aes = F, data = pvalues %>% filter(IdentI==11) %>% mutate(Y=c(16,17.5)),
+            aes(x=Entity, y=Y, label=p), size=2.25)+
+  scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
+  ggtitle(expression('T'[REG]~'EM'[2]))+
+  scale_y_continuous(limits = c(0,18.25), name="% of total T-cells (CITE-seq)")+
+  scale_x_discrete(limits=c("rLN", "DLBCL", "MCL", "FL", "MZL"))+
+  mytheme_1+
+  theme(strip.background = element_rect(color=NA),
+        plot.title = element_text(vjust = -1, color=colors_umap_cl[["11"]]),
+        axis.text.x = element_text(angle=45, hjust = 1),
+        panel.border = element_rect(size=0.5),
+        axis.title = element_blank(),
+        panel.background = element_rect(fill=NA),
+        plot.margin = unit(c(0,0.25,0,0.1), "cm"))
+
+```
+
+## Surface proteins
+```{r surface proteins}
+
+proteins_selected <- c("CD69"="CD69", 
+                       "CD25"="CD25", 
+                       "ICOS"="CD278", 
+                       "CD134"="CD134", 
+                       "CD161"="CD161", 
+                       "CCR4"="CD194", 
+                       "CCR5"="CD195", 
+                       "CXCR3"="CD183", 
+                       "CXCR5"="CD185", 
+                       "PD1"="CD279", 
+                       "CD38"="CD38", 
+                       "CD39"="CD39", 
+                       "TIGIT"="TIGIT")
+
+p3 <- 
+  left_join(percentageADT, meanADT) %>% 
+  filter(IdentI %in% c(6, 8, 11, 15, 13), Epitope %in% proteins_selected) %>% 
+  ggplot(aes(x=Epitope, y=IdentI, size=100*Prop, fill=Expression))+
+  geom_point(shape=21, stroke=0.1, color="grey45")+ 
+  scale_size_continuous(range=c(0, 4), name="% pos. cells", limits=c(0, 100))+
+  scale_fill_gradientn(name="Expression", colours = brewer.pal(5, "BuGn"), limits=c(0,1))+
+  scale_y_discrete(limits=rev(as.character(c(6, 8, 13, 15, 11))), 
+                   labels=parse(text=rev(labels_cl_parsed[5:9]))
+                   )+
+  scale_x_discrete(limits=unname(proteins_selected), labels=names(proteins_selected))+
+  ggtitle("Protein level")+
+  coord_cartesian(clip = "off")+
+  theme_bw()+
+  theme(axis.title = element_blank(),
+        legend.position = "right",
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_blank(),
+        axis.text = element_text(size=6.5),
+        axis.ticks.y = element_blank(),
+        legend.text = element_text(size = 7, color="black"),
+        legend.title = element_text(size = 7, color="black", vjust = 0.5),
+        legend.box.margin=margin(-10,-10,-8,-8),
+        legend.key.height = unit(0.3, "cm"),
+        legend.key.width = unit(0.3, "cm"),
+        panel.border = element_rect(size=0.25),
+        plot.margin = unit(c(0,0.5,0,0.5), "cm"),
+        plot.tag = element_text(margin =  unit(c(0,1,0,0), "cm")),
+        plot.title = element_text(size = 7, color="black", vjust = -1, hjust = 0.5, face = "bold"),
+        panel.grid = element_blank())+
+  labs(tag = "B")
+
+for(i in 5:9) {
+  
+  p3 <- p3+
+    annotation_custom(grob = rectGrob(gp = gpar(fill=colors_umap_cl[as.character(cluster_order)[i]], col="white")), 
+                    ymin = rev(c(seq(0.5, 4.5, 1)+0.25))[i-4], 
+                    ymax = rev(c(seq(1.5, 5.5, 1)-0.25))[i-4],
+                    xmin = 0, xmax = -0.75)+
+    annotation_custom(grob = textGrob(label = labels_cl[[i]], rot = 0, hjust = 1, gp = gpar(cex=0.5)), 
+                      ymin = rev(c(seq(0.5, 4.5, 1)+0.25))[i-4], 
+                      ymax = rev(c(seq(1.5, 5.5, 1)-0.25))[i-4],
+                    xmin = -1, xmax = -1)
+}
+
+
+```
+
+## Assemble plot
+```{r assemble plot I, fig.height=2.5}
+
+p1+p2+p3+plot_layout(widths = c(1,1,1.45))
+#ggsave(width = 19, height = 5.8, units = "cm", filename = "Figure6_p1.pdf")
+
+```
+
+# Part 2
+## Differentially expressed genes
+```{r differentially expressed genes}
+
+height.label <- 0.94
+position.label <- 1.1
+Idents(Combined_T) <- "IdentI"
+
+df_markers1115 <- FindMarkers(Combined_T, ident.1 = 11, ident.2 = c(15), test.use = "roc", assay = "integratedRNA") %>% 
+  rownames_to_column("Feature") %>% mutate(Assay="Gene")
+
+labels <- c("KLF2", "IKZF3", "IL21", "ASCL2", "IKZF2", "FOXP3", "CXCL13")
+
+df_tmp <- df_markers1115 %>% mutate(Label=ifelse(Feature %in% labels, Feature, NA)) %>% 
+  mutate(Label=gsub(Label, pattern = ".", fixed = T, replacement = ""))
+
+df_tmp1 <- df_tmp %>% filter(avg_log2FC<0)
+df_tmp2 <- df_tmp %>% filter(avg_log2FC>0)
+
+p4 <- 
+  ggplot()+
+  geom_point(data=df_tmp1, aes(x=avg_log2FC, y=power), alpha=ifelse(!is.na(df_tmp1$Label), 1, 0.25), stroke=0, size=1.25)+
+  geom_point(data=df_tmp2, aes(x=avg_log2FC, y=power), alpha=ifelse(!is.na(df_tmp2$Label), 1, 0.25), stroke=0, size=1.25)+
+  ggrepel::geom_text_repel(data=df_tmp1, aes(x=avg_log2FC, y=power, label=Label), show.legend = F, size=2.25, segment.size=0.25, xlim = c(-1.25, -1.75))+
+  ggrepel::geom_text_repel(data=df_tmp2, aes(x=avg_log2FC, y=power, label=Label), show.legend = F, size=2.25, segment.size=0.25, xlim = c(1.3, 1.5))+
+  geom_vline(xintercept = 0, linetype="dashed", size=0.25)+
+  scale_y_continuous(breaks = c(0.2, 0.4, 0.6, 0.8), limits=c(0.1, 0.85), name="2 x abs(AUC-0.5)")+
+  scale_x_continuous(name=expression('log'[2]~'fold change'), limits = c(-2.2, 2.2), expand = c(0,0))+
+  annotation_custom(grob = textGrob(label = expression('T'[REG]~'EM'[1]), hjust = 0.5, gp = gpar(cex=0.6, fontface="bold", col=colors_umap_cl["15"])), 
+                    xmin = -position.label, xmax = -position.label,
+                    ymin = height.label, ymax = height.label)+
+  annotation_custom(grob = textGrob(label = expression('T'[REG]~'EM'[2]), hjust = 0.5, gp = gpar(cex=0.6, fontface="bold", col=colors_umap_cl["11"])),
+                    xmin = position.label, xmax = position.label,
+                    ymin = height.label, ymax = height.label)+
+  mytheme_1+
+  coord_cartesian(clip = "off")+
+  theme(legend.position = c(0.17, 0.15),
+        legend.key.height = unit(units="cm", 0.3),
+        legend.box.spacing = unit(units="cm", 0.01),
+        legend.text = element_text(size=6),
+        panel.border = element_rect(size=0.25),
+        plot.margin = unit(c(0,0.25,0,0), "cm"),
+        legend.background = element_rect(fill = NA),
+        legend.box.margin=margin(-20,-20,-20,-20),
+        legend.key.width = unit(units="cm", 0.1))+
+    labs(tag = "C")
+
+```
+
+## Shared clonotypes
+```{r shared clonotypes}
+
+df_clonotypes_shared <- 
+  left_join(DFtotal_5prime %>% filter(!is.na(raw_clonotype_id)) %>% 
+            select(Barcode_fulla=Barcode_full, PatientID, refUMAP_1a=refUMAP_1, refUMAP_2a=refUMAP_2, IdentIa=IdentI, raw_clonotype_id) %>% distinct(),
+          DFtotal_5prime %>% filter(!is.na(raw_clonotype_id)) %>% 
+            select(Barcode_fullb=Barcode_full, PatientID, refUMAP_1b=refUMAP_1, refUMAP_2b=refUMAP_2, IdentIb=IdentI, raw_clonotype_id) %>% distinct()
+          ) %>% 
+  filter(Barcode_fulla!=Barcode_fullb) %>% 
+  filter(IdentIa!=IdentIb)
+
+df_subset <- 
+  df_clonotypes_shared %>% 
+  add_entity() %>% 
+  filter(IdentIb==11) %>% 
+  filter(refUMAP_1b<1, refUMAP_2b>4)
+
+label6 <- paste0(100*round(nrow(df_subset %>% filter(IdentIa==6))/nrow(df_subset), 3), " %")
+label14 <- paste0(100*round(nrow(df_subset %>% filter(IdentIa==14))/nrow(df_subset), 3), " %")
+label5 <- paste0(100*round(nrow(df_subset %>% filter(IdentIa==5))/nrow(df_subset), 3), " %")
+
+p5 <- ggplot()+
+  geom_point_rast(data=DFtotal_5prime,
+                  aes(x=refUMAP_1, y=refUMAP_2, fill=IdentI), size=0.25, 
+                  alpha=ifelse(DFtotal_5prime$IdentI==11, 0.75, 0.15), stroke=0, shape=21)+
+  geom_curve(data= df_subset, 
+             aes(x=refUMAP_1a, y=refUMAP_2a, xend=refUMAP_1b, yend=refUMAP_2b, color=IdentIa,
+                 group=paste(raw_clonotype_id, PatientID)), curvature = -0.4, size=0.15, alpha=0.4)+
+  geom_text(inherit.aes = F, aes(x=-0.75, y=8.5, label=label6), color=colors_umap_cl[["6"]], size=2.25)+
+  geom_text(inherit.aes = F, aes(x=4.5, y=6.75, label=label14), color=colors_umap_cl[["14"]], size=2.25)+
+  geom_text(inherit.aes = F, aes(x=8, y=1, label=label5), color=colors_umap_cl[["5"]], size=2.25)+
+  scale_fill_manual(values = colors_umap_cl, guide="none")+
+  scale_color_manual(values = colors_umap_cl, guide="none")+
+  coord_cartesian(clip = "off")+
+  labs(
+    x="refUMAP-1",
+    y="refUMAP-2",
+    title="Paired clonotypes of <span style='color:#08306B'>T<sub>REG</sub> EM<sub>2</sub></span>")+
+  mytheme_1+
+  theme(panel.border = element_rect(size=0.25),
+        plot.title = element_textbox_simple(size = 6.5, width = NULL, padding = margin(1.25, 0, 1, 0), 
+                                            lineheight = 1.25, halign=0.5, face = "plain"),
+        plot.margin = unit(c(0,0.25,0,0), units = "cm"))+
+  labs(tag = "D")
+
+
+```
+
+## Association with FL grade
+```{r tumor grading}
+
+p6 <- df_freq %>% 
+  left_join(., df_meta %>% select(PatientID, FL_Grade, Entity) %>% distinct, by="PatientID") %>% 
+  filter(Population==11, Entity=="FL") %>% 
+  ggplot(aes(x=FL_Grade, y=RNA))+
+  geom_boxplot(size=0.25, width=0.3, outlier.alpha = 0)+
+  ggbeeswarm::geom_beeswarm(size=0.8, shape=21, stroke=0.25, cex = 2.75, fill="grey65")+
+  stat_compare_means(comparisons = list(c("1/2", "3A")), vjust = -0.35, label.y = c(16.75),
+                     size=2.25, tip.length = 0.02, bracket.size = 0.25)+
+  ggtitle(expression('T'[REG]~'EM'[2]))+
+  xlab("Grade")+
+  ylim(0,18.25)+
+  ylab("% of total T-cells")+
+  mytheme_1+
+  theme(legend.position = "none",
+        strip.background = element_rect(color=NA),
+        panel.border = element_rect(size=0.5),
+        plot.title = element_text(vjust = -1, color=colors_umap_cl[["11"]]),
+        panel.background = element_rect(fill=NA),
+        plot.margin = unit(c(0,0.25,0,0.25), "cm"))+
+    labs(tag = "E")
+
+p7 <- df_freq %>% 
+  left_join(., df_meta %>% select(PatientID, FL_Grade, Entity) %>% distinct, by="PatientID") %>% 
+  filter(Population==6, Entity=="FL") %>% 
+  ggplot(aes(x=FL_Grade, y=RNA))+
+  geom_boxplot(size=0.25, width=0.3, outlier.size = 1, outlier.alpha = 0, outlier.shape = 21, outlier.fill = "grey70")+
+  ggbeeswarm::geom_beeswarm(size=0.8, shape=21, stroke=0.25, cex = 2.75, fill="grey65")+
+  stat_compare_means(comparisons = list(c("1/2", "3A")), vjust = -0.35, label.y = c(59.5),
+                     size=2.25, tip.length = 0.02, bracket.size = 0.25)+
+  ggtitle(expression('T'[FH]))+
+  ylim(0,65)+
+  xlab("Grade")+
+  ylab("% of total T-cells")+
+  mytheme_1+
+  theme(legend.position = "none",
+        strip.background = element_rect(color=NA),
+        panel.border = element_rect(size=0.5),
+        plot.title = element_text(vjust = -1, color=colors_umap_cl[["6"]]),
+        panel.background = element_rect(fill=NA),
+        plot.margin = unit(c(0,0.25,0,0.25), "cm"))+
+    labs(tag = "F")
+
+```
+
+## Assemble plot
+```{r compose plot II, fig.height=2.8}
+
+p4+p5+p6+p7+plot_layout(widths = c(1.05,1,0.3,0.3))
+
+#ggsave(width = 19, height = 6.5, units = "cm", filename = "Figure6_p2.pdf")
+
+```
+
+# Session info
+```{r session info}
+
+sessionInfo()
+
+```

@@ -1,0 +1,486 @@
+---
+title: "Figure 5"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  rmdformats::readthedown: 
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Read data, functions and packages
+```{r read data}
+
+source("R/ReadPackages.R")
+source("R/Functions.R")
+source("R/ReadData.R")
+source("R/ThemesColors.R")
+source("R/Helpers.R")
+
+```
+
+# Overview plot 
+## Inset
+```{r inset}
+
+ori <- c(-8.25,-8.5)
+l <- 3
+off <- 1
+colors_umap_cl_mod <- colors_umap_cl
+for(i in names(colors_umap_cl)){
+  if(!i %in% c("3", "5", "12", "16")){
+    colors_umap_cl_mod[i] <- "grey"
+  }
+}
+
+
+p1_inset <- 
+  df_comb %>% sample_frac(0.075) %>% 
+  mutate(Code=ifelse(IdentI %in% c(12,3,16,5), T, F)) %>% 
+  filter(!(IdentI %in% c(12,3,16,5) & wnnUMAP_2>1.25)) %>% 
+  ggplot(aes(x=wnnUMAP_1, y=wnnUMAP_2, fill=as.factor(IdentI), color=as.factor(IdentI), alpha=Code))+
+  #geom_point(size=0.25, stroke=0, shape=21)+
+  ggrastr::geom_point_rast(size=0.35, stroke=0, shape=21, raster.dpi = 300)+
+  scale_color_manual(values = colors_umap_cl_mod, limits=factor(cluster_order),
+                    labels=unlist(labels_cl))+
+  scale_fill_manual(values = colors_umap_cl_mod, limits=factor(cluster_order),
+                    labels=unlist(labels_cl))+
+  scale_alpha_manual(values = c(0.1,0.75))+
+  scale_x_continuous(limits = c(ori[1],10), expand = c(0,0))+
+  scale_y_continuous(limits = c(ori[2],10), expand = c(0,0))+
+  mytheme_1+
+  coord_fixed(clip = "off")+
+    theme(axis.ticks = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_rect(fill = NA),
+        axis.title = element_blank(),
+        axis.text = element_blank())
+
+```
+
+## Pseudotime
+```{r pseudotime}
+
+df_pseudotime <- FetchData(ttox, vars = c("wnnUMAP_1", "wnnUMAP_2", "Pseudotime", "IdentI", "PatientID")) %>%
+  add_entity() %>% 
+  mutate(CellType="Cytotoxic T cells") %>% 
+  mutate(IdentI=as.character(IdentI)) %>% 
+  drop_na() %>% 
+  filter(wnnUMAP_2<(0.7*wnnUMAP_1-1)) %>% 
+  mutate(name="Trajectory analysis / Pseudotime")
+
+p1 <- ggplot()+
+  ggrastr::geom_point_rast(data=df_pseudotime %>% filter(IdentI=="16"), aes(x=wnnUMAP_1, y=wnnUMAP_2), fill="grey75", 
+                           size=0.35, shape=21, stroke=0, raster.dpi = 600)+
+  ggrastr::geom_point_rast(data=df_pseudotime %>% filter(IdentI!="16"), aes(x=wnnUMAP_1, y=wnnUMAP_2, fill=Pseudotime), 
+                           size=0.35, shape=21, stroke=0, raster.dpi = 600)+
+  scale_fill_viridis(option = "viridis", direction = -1, breaks=c(0,15,30), name="Ps.time")+
+  facet_wrap(~name)+
+  scale_x_continuous(name="umapWNN-1", limits=c(-6, 11), expand = c(0,0))+
+  scale_y_continuous(name="umapWNN-2", limits=c(-8, 3), expand = c(0,0))+
+  mytheme_1+
+  coord_cartesian(clip = "off")+
+  theme(legend.box.margin = unit(c(0,-0.25,-0.35,-0.25), units = "cm"),
+        panel.border = element_rect(size=0.25, color="black"),
+        legend.title = element_text(size=6),
+        legend.text = element_text(size=6),
+        legend.position = c(0.90,0.25),
+        panel.background = element_rect(fill=NA),
+        strip.background = element_rect(color=NA),
+        legend.key.height = unit(units="cm", 0.15),
+        legend.key.width = unit(units="cm", 0.15),
+        legend.box.background = element_rect(fill=NA, color=NA),
+        legend.background = element_rect(fill=NA, color=NA)
+        )+
+  labs(tag="A")
+
+p1 <- p1+inset_element(p1_inset, left = -0.05, right = 0.4, bottom = 0.5, top = 1.05,  on_top = F)
+
+```
+
+# Differentially expressed features
+```{r differentially expressed features}
+
+df_tmp516 <- 
+  rbind(FindMarkers(ttox, ident.1 = 5, ident.2 = 16, test.use = "roc", assay = "integratedADT") %>% 
+          rownames_to_column("Feature") %>% mutate(Assay="Protein"),
+        FindMarkers(ttox, ident.1 = 5, ident.2 = 16, test.use = "roc", assay = "integratedRNA") %>% 
+          rownames_to_column("Feature") %>% mutate(Assay="Gene")) 
+
+labels <- c("CCL4", "NKG7", "CST7", "TCF7", ".CD279", ".CD69", ".CD366")
+
+df_tmp516 <- df_tmp516 %>% 
+  mutate(Label=ifelse(Feature %in% labels, Feature, NA)) %>% 
+  mutate(Label=gsub(Label, pattern = ".", fixed = T, replacement = "")) %>% 
+  mutate(Label=gsub(Label, pattern = "CD279", fixed = T, replacement = "PD1")) %>% 
+  mutate(Label=gsub(Label, pattern = "CD366", fixed = T, replacement = "TIM3")) 
+
+height.label <- 1.02
+position.label_left <- 1.6
+position.label_right <- 2.25
+Idents(ttox) <- "IdentI"
+
+df_tmp1 <- df_tmp516 %>% filter(avg_log2FC<0)
+df_tmp2 <- df_tmp516 %>% filter(avg_log2FC>0)
+
+p3 <- ggplot()+
+  geom_point(data=df_tmp1, aes(x=avg_log2FC, y=power, color=Assay), alpha=ifelse(!is.na(df_tmp1$Label), 1, 0.25), stroke=0, size=1)+
+  geom_point(data=df_tmp2, aes(x=avg_log2FC, y=power, color=Assay), alpha=ifelse(!is.na(df_tmp2$Label), 1, 0.25), stroke=0, size=1)+
+  ggrepel::geom_text_repel(data=df_tmp1, aes(x=avg_log2FC, y=power, color=Assay, label=Label), show.legend = F, size=2.25, segment.size=0.25, xlim = c(-1.9, -2.5), ylim = c(0.75,0.85), seed = 1)+
+  ggrepel::geom_text_repel(data=df_tmp2 %>% filter(Feature==".CD366"), aes(x=avg_log2FC, y=power, color=Assay, label=Label), show.legend = F, size=2.25, segment.size=0.25, seed = 2, xlim = c(0.5,0.6),)+
+  ggrepel::geom_text_repel(data=df_tmp2 %>% filter(Feature!=".CD366"), aes(x=avg_log2FC, y=power, color=Assay, label=Label), show.legend = F, size=2.25, segment.size=0.25, ylim = c(0.62, 0.9), seed = 1)+
+  geom_vline(xintercept = 0, linetype="dashed", size=0.25)+
+  scale_color_manual(name=NULL, values = c("black", "#f1a340"))+
+  scale_x_continuous(limits = c(-3.2, 3.2), expand = c(0,0), name=expression('log'[2]~'fold change'))+
+  scale_y_continuous(limits = c(0, 0.9), name="2 x abs(AUC-0.5)")+
+  annotation_custom(grob = textGrob(label = expression('EM'[2]~''), hjust = 0.5, gp = gpar(cex=0.6, fontface="bold", col=colors_umap_cl["5"])), 
+                    xmin = -position.label_left, xmax = -position.label_left,
+                    ymin = height.label, ymax = height.label)+
+  annotation_custom(grob = textGrob(label = expression('EM'[3]~''), hjust = 0.5, gp = gpar(cex=0.6, fontface="bold", col=colors_umap_cl["16"])),
+                    xmin = position.label_right, xmax = position.label_right,
+                    ymin = height.label, ymax = height.label)+
+  mytheme_1+
+  coord_cartesian(clip = "off")+
+  theme(legend.position = c(0.85, 0.14),
+        legend.key.height = unit(units="cm", 0.3),
+        legend.box.spacing = unit(units="cm", 0.01),
+        panel.border = element_rect(size=0.25),
+        legend.background = element_rect(fill = NA),
+        legend.box.margin=margin(-20,-20,-20,-20),
+        legend.key.width = unit(units="cm", 0.1))+
+  labs(tag = "B")
+
+```
+
+# Exhaustion signature
+## Stimulatory markers
+```{r stimulatory}
+
+marker <- c("CD45RO", "CD69", "CD38", "CD278", "CD244")
+marker_full <- paste0("integratedadt_.", marker)
+
+p4 <- FetchData(ttox, slot = "data", vars = c(marker_full, "integratedadt_.CD4", "integratedadt_.CD8a",
+                                              colnames(ttox@meta.data))) %>%
+  filter(!IdentI %in% c(16)) %>% 
+  mutate(Pseudotime_round=round(Pseudotime, 1)) %>% 
+  pivot_longer(cols = all_of(marker_full)) %>%
+  select(-Entity) %>% 
+  add_entity() %>% 
+  group_by(Pseudotime_round, name) %>% 
+  dplyr::summarise(Mean=mean(value), `.groups`="drop") %>% 
+  group_by(name) %>% 
+  mutate(name=gsub(name, pattern = "integratedadt_.", replacement = "")) %>% 
+  mutate(name=factor(name, levels = marker, labels = c("CD45RO", "CD69", "CD38", "ICOS", "CD244"))) %>% 
+  group_by(name) %>%  
+  dplyr::mutate(Mean=(Mean-min(Mean))/(max(Mean)-min(Mean))) %>% 
+  filter(Mean < 0.98) %>% 
+  dplyr::mutate(Mean=(Mean-min(Mean))/(max(Mean)-min(Mean))) %>% 
+  ggplot(aes(x=Pseudotime_round, y=Mean, color=Pseudotime_round, fill=Pseudotime_round))+
+  scale_fill_viridis(direction = -1, option = "viridis")+
+  scale_color_viridis(direction = -1, option = "viridis")+
+  geom_point(size=0.5, shape=21, stroke=0)+
+  facet_wrap(~name, strip.position="top", ncol = 1)+
+  scale_y_continuous(name="Protein / RNA / TF level", breaks = c(0,0.5,1.0))+
+  scale_x_continuous(name="Pseudotime", breaks = c(0, 10, 20, 30))+
+  mytheme_1+
+  theme(strip.text = element_text(angle = 0, size=6),
+        panel.border = element_rect(size=0.5),
+        plot.tag = element_text(margin = unit(c(0,0,-0.2,0), "cm")),
+        plot.margin = unit(c(-0.2,0,-0.25,0.1), "cm"))
+
+```
+
+## Inhibitory markers
+```{r inhibitory}
+
+marker <- c("CD279", "CD366", "CD223", "TIGIT", "CD39")
+marker_full <- paste0("integratedadt_.", marker)
+
+p5 <- FetchData(ttox, slot = "data", vars = c(marker_full, "integratedadt_.CD4", "integratedadt_.CD8a",
+                                              colnames(ttox@meta.data))) %>%
+  filter(!IdentI %in% c(16)) %>%
+  select(-integratedadt_.CD4, -integratedadt_.CD8a) %>% 
+  mutate(Pseudotime_round=round(Pseudotime, 1)) %>% 
+  pivot_longer(cols = all_of(marker_full)) %>% 
+  group_by(Pseudotime_round, name) %>% 
+  dplyr::summarise(Mean=mean(value), `.groups`="drop") %>% 
+  group_by(name) %>% 
+  mutate(name=gsub(name, pattern = "integratedadt_.", replacement = "")) %>% 
+  mutate(name=factor(name, levels = marker, labels = c("PD1", "TIM3", "LAG3", "TIGIT", "CD39"))) %>% 
+  group_by(name) %>%  
+  dplyr::mutate(Mean=(Mean-min(Mean))/(max(Mean)-min(Mean))) %>% 
+  filter(Mean < 0.98 & Mean>0.02) %>% 
+  dplyr::mutate(Mean=(Mean-min(Mean))/(max(Mean)-min(Mean))) %>% 
+  ggplot(aes(x=Pseudotime_round, y=Mean, color=Pseudotime_round, fill=Pseudotime_round))+
+  scale_fill_viridis(direction = -1, option = "viridis")+
+  scale_color_viridis(direction = -1, option = "viridis")+
+  geom_point(size=0.5, shape=21, stroke=0)+
+  facet_wrap(~name, strip.position="top", ncol = 1)+
+  scale_y_continuous(name="Protein / RNA expression level", breaks = c(0,0.5,1.0))+
+  scale_x_continuous(name="Pseudotime", breaks = c(0, 10, 20, 30))+
+  mytheme_1+
+  theme(strip.text = element_text(angle = 0, size=6),
+        axis.title.y = element_blank(),
+        panel.border = element_rect(size=0.5),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        plot.tag = element_text(margin = unit(c(0,0,-0.2,0), "cm")),
+        plot.margin = unit(c(-0.2,0,-0.25,0.1), "cm"))
+
+```
+
+## Effector molecules
+```{r granzymes}
+
+marker <- c("GZMA", "GZMB", "GZMH", "GZMK", "PRF1")
+marker_full <- paste0("integratedrna_", marker)
+
+p6 <- FetchData(ttox, slot = "data", vars = c(marker_full, 
+                                              colnames(ttox@meta.data))) %>%
+  filter(!IdentI %in% c(16)) %>%
+  mutate(Pseudotime_round=round(Pseudotime, 1)) %>% 
+  pivot_longer(cols = all_of(marker_full)) %>% 
+  group_by(Pseudotime_round, name) %>% 
+  dplyr::summarise(Mean=mean(value), `.groups`="drop") %>% 
+  group_by(name) %>% 
+  mutate(name=gsub(name, pattern = "integratedrna_", replacement = "")) %>% 
+  mutate(name=factor(name, levels = marker)) %>% 
+  group_by(name) %>%  
+  dplyr::mutate(Mean=(Mean-min(Mean))/(max(Mean)-min(Mean))) %>% 
+  filter(Mean < 0.98) %>% 
+  dplyr::mutate(Mean=(Mean-min(Mean))/(max(Mean)-min(Mean))) %>% 
+  ggplot(aes(x=Pseudotime_round, y=Mean, color=Pseudotime_round, fill=Pseudotime_round))+
+  scale_fill_viridis(direction = -1, option = "viridis")+
+  scale_color_viridis(direction = -1, option = "viridis")+
+  geom_point(size=0.5, shape=21, stroke=0)+
+  geom_vline(xintercept=24, size=0.25, linetype="dashed")+
+  facet_wrap(~name, strip.position="top", ncol = 1)+
+  scale_y_continuous(name="RNA level", breaks = c(0,0.5,1.0))+
+  scale_x_continuous(name="Pseudotime", breaks = c(0, 10, 20, 20, 30))+
+  mytheme_1+
+  theme(strip.text = element_text(angle = 0, size=6, face="italic"),
+        axis.title.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        panel.border = element_rect(size=0.5),
+        plot.tag = element_text(margin = unit(c(0,0,-0.2,0), "cm")),
+        plot.margin = unit(c(-0.2,0,-0.25,0.1), "cm"))
+
+```
+
+## Transcription factors
+```{r tfs}
+
+marker <- c("PRDM1", "BATF", "IRF4", "EOMES", "TCF7")
+marker_full <- paste0("tfactivity_", marker, "-E")
+
+p7 <- FetchData(ttox, slot = "data", vars = c(marker_full, "integratedadt_.CD4", "integratedadt_.CD8a",
+                                              colnames(ttox@meta.data))) %>%
+  filter(!IdentI %in% c(16)) %>%
+  select(-integratedadt_.CD4, -integratedadt_.CD8a) %>% 
+  pivot_longer(cols = all_of(marker_full)) %>% 
+  mutate(value=ifelse(is.na(value), 0, value)) %>% 
+  mutate(Pseudotime_round=round(Pseudotime, 1)) %>% 
+  group_by(Pseudotime_round, name) %>% 
+  dplyr::summarise(Mean=mean(value), `.groups`="drop") %>% 
+  group_by(name) %>% 
+  mutate(name=gsub(name, pattern = "tfactivity_|-E", replacement = "")) %>% 
+  mutate(name=factor(name, levels = marker)) %>% 
+  group_by(name) %>% 
+  dplyr::mutate(Mean=(Mean-min(Mean))/(max(Mean)-min(Mean))) %>% 
+  filter(Mean < 0.98 & Mean>0.02) %>% 
+ dplyr::mutate(Mean=(Mean-min(Mean))/(max(Mean)-min(Mean))) %>% 
+  ggplot(aes(x=Pseudotime_round, y=Mean, color=Pseudotime_round, fill=Pseudotime_round))+
+  geom_point(size=0.5, shape=21, stroke=0)+
+  scale_fill_viridis(direction = -1, option = "viridis")+
+  scale_color_viridis(direction = -1, option = "viridis")+
+  facet_wrap(~name, strip.position="top", ncol = 1)+
+  scale_x_continuous(name="Pseudotime", breaks = c(0, 10, 20, 20, 30))+
+  mytheme_1+
+  theme(strip.text = element_text(angle = 0, size=6),
+        axis.title.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.border = element_rect(size=0.5),
+        axis.text.y = element_blank(),
+        plot.tag = element_text(margin = unit(c(0,0,-0.2,0), "cm")),
+        plot.margin = unit(c(-0.2,0.1,0,0.1), "cm"))
+
+```
+
+# Density per pseudotime
+```{r density}
+
+df <- FetchData(ttox, vars = c("Entity", "Pseudotime",
+                               "PatientID", "IdentI")) %>%
+  left_join(., df_meta %>% select(PatientID, Entity) %>% distinct) %>% 
+  filter(IdentI!="16") %>% 
+  mutate(Entity=gsub(Entity, pattern = ", GCB|, non-GCB", replacement = "")) %>% 
+  mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL")))
+
+term_exh <- df %>% 
+  drop_na() %>% 
+  mutate(Exhausted=Pseudotime>24) %>% 
+  add_prop(vars = c("PatientID", "Entity", "Exhausted"), group.vars = 1) %>% 
+  fill_zeros(names_from = "Exhausted", values_from = "Prop")  %>% 
+  filter(Exhausted==T) %>% 
+  group_by(Entity) %>% 
+  summarise(MeanProp=100*round(median(Prop), 2))
+
+p8 <- ggplot()+
+  geom_vline(xintercept = 24, linetype="dashed", size=0.25)+
+  geom_density(data = df, aes(x=Pseudotime, group=PatientID, color=Entity), alpha=0.25, show.legend = F, adjust=1.6, size=0.25)+
+   scale_color_brewer(palette = "Paired", limits=c( "DLBCL", "MCL", "FL", "MZL", "rLN"))+
+  geom_text(data = data.frame(Entity=c("rLN", "DLBCL", "MCL", "FL", "MZL")), aes(label=Entity, x=0, y=0.2), size=2.25, hjust=0, check_overlap = T)+
+  geom_text(data=term_exh, aes(x=28.3, y=0.2, label=paste0(MeanProp, "%")), hjust=0.5, size=2.25)+
+  facet_wrap(~Entity, ncol = 1)+
+  scale_y_continuous(limits=c(-0.015,0.22), breaks = c(0, 0.1, 0.2), name="Density")+
+  annotation_custom(rasterGrob(t(viridis(n=100, direction = -1, option = "viridis")), width=unit(1,"npc"), height=unit(1,"npc")), 
+                    ymin = -0.05, ymax = -0.01, xmin = -2.5, xmax = 32.5)+
+  xlab("Pseudotime")+
+  mytheme_1+
+  theme(legend.position = "none",
+        legend.text = element_text(size=7),
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        legend.title = element_blank(),
+        axis.title.y = element_text(size = 7, vjust = 3),
+        plot.margin = unit(c(0,0.1,0,0.2), "cm"),
+        panel.border = element_rect(size=0.5),
+        plot.tag = element_text(margin = unit(c(0,-0.25,0,0), "cm")),
+        legend.box.spacing = unit(units = "cm", 0.01),
+        legend.key.height = unit(units = "cm", 0.15),
+        legend.key.width = unit(units = "cm", 0.25))+
+  labs(tag = "D")
+
+```
+
+# Survival analysis
+## PFS analysis (Chapuy)
+```{r pfs chapuy}
+
+df_surv <- 
+    left_join(df_surv_chapuy, df_ttoxcompl_chapuy) %>% 
+    mutate(Ratio=Exhausted/Absolute) %>% 
+    select(PatientID, status_pfs, time_pfs, Ratio)
+
+mxs.obj <- maxstat.test(Surv(time_pfs, status_pfs) ~ Ratio, data=df_surv,
+                        smethod="LogRank", pmethod="exactGauss", 
+                        minprop = 0.27, maxprop=0.75, abseps=0.01)
+
+df_surv <- mutate(df_surv, Factor=ifelse(Ratio > mxs.obj$estimate, "High", "Low"))
+fit <- survfit(Surv(time_pfs, status_pfs) ~ Factor, data = df_surv)
+
+p10 <- ggsurvplot(fit, data = df_surv, 
+           pval = TRUE, 
+           pval.size = 2,
+           censor.size=2,
+           size=0.25,
+           pval.coord = c(5.5, 0.95),
+           xlab = "Progression-free survival (Years)",
+           ylab = "Survival probability",
+           palette = c(colors_umap_cl[["18"]], colors_umap_cl[["12"]]),
+           legend.labs = c("Exhaustion High", "Exhaustion Low"),
+           legend.title = "", 
+           legend = c(0.3,0.2),
+           fontsize = 2,
+           title="Chapuy et al. 2018 (DLBCL)",
+           ggtheme = mytheme_1+theme(plot.title = element_text(hjust = 0.5, size=7, face = "plain"),
+                                     legend.text = element_text(size=5),
+                                     panel.border = element_rect(size=0.5),
+                                     legend.key.height = unit(units = "cm", 0.3),
+                                     legend.margin = margin(c(0,0,0,0), unit = "cm"),
+                                     legend.spacing.x = unit(units = "cm", 0.2),
+                                     legend.title = element_blank()))
+
+
+```
+
+## PFS analysis (Schmitz)
+```{r pfs schmitz}
+
+df_surv <- 
+  left_join(df_surv_schmitz, df_ttoxcompl_schmitz) %>% 
+  mutate(Ratio=Exhausted/Absolute) %>% 
+  select(PatientID, Subtype, Gender, Age, time_pfs, status_pfs, Ratio) %>% 
+  filter(time_pfs!="NA") %>% 
+  mutate(time_pfs=as.numeric(time_pfs))
+
+mxs.obj <- maxstat.test(Surv(time_pfs, status_pfs) ~ Ratio, data=df_surv,
+                        smethod="LogRank", pmethod="exactGauss", 
+                        minprop = 0.27, maxprop=0.75, abseps=0.01)
+
+df_surv <- mutate(df_surv, Factor=ifelse(Ratio > mxs.obj$estimate, "High", "Low"))
+fit <- survfit(Surv(time_pfs, status_pfs) ~ Factor, data = df_surv)
+
+p11 <- ggsurvplot(fit, data = df_surv, 
+           pval = TRUE, 
+           pval.size = 2,
+           censor.size=2,
+           size=0.25,
+           pval.coord = c(8.5, 0.95),
+           xlab = "Progression-free survival (Years)",
+           ylab = "Survival probability",
+           palette = c(colors_umap_cl[["18"]], colors_umap_cl[["12"]]),
+           legend.labs = c("Exhaustion High", "Exhaustion Low"),
+           legend.title = "", 
+           legend = c(0.3,0.2),
+           fontsize = 2,
+           title="Schmitz et al. 2018 (DLBCL)",
+           ggtheme = mytheme_1+theme(plot.title = element_text(hjust = 0.5, size=7, face = "plain"),
+                                     legend.text = element_text(size=5),
+                                     panel.border = element_rect(size=0.5),
+                                     legend.key.height = unit(units = "cm", 0.3),
+                                     legend.margin = margin(c(0,0,0,0), unit = "cm"),
+                                     legend.spacing.x = unit(units = "cm", 0.2),
+                                     legend.title = element_blank()))
+
+
+```
+
+## PFS Gallium
+```{r gallium}
+
+p12 <- readRDS("data/SurvPlot_Ttox_Gallium.rds")
+p12$plot$plot_env$legend <- c(0.3, 0.2)
+p12$plot$theme$legend.position <- c(0.3, 0.2)
+
+```
+
+# Assemble plot
+```{r assemble, fig.height=7.5}
+
+p_full_p1 <- 
+  wrap_plots(wrap_plots(p1/plot_spacer()/p3+plot_layout(heights = c(1,0.1,1)))+
+                       wrap_plots(p4+labs(tag = "C")+
+                                    p5+
+                                    p6+
+                                    p7+
+                                    plot_layout(ncol = 4))+
+                       p8+plot_layout(widths = c(1.15,2.1,0.6)))
+
+p_full_p2 <- wrap_plots(p10$plot+labs(tag = "E")+p11$plot+labs(tag = "F")+p12$plot+labs(tag = "G"))
+
+p_full <- p_full_p1/p_full_p2+plot_layout(heights = c(13.5,5))
+p_full
+
+#ggsave(width = 19, height = 17.5, units = "cm", filename = "Figure5.pdf")
+
+```
+
+# Session info
+```{r session}
+
+sessionInfo()
+
+```

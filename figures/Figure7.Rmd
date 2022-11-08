@@ -1,0 +1,508 @@
+---
+title: "Figure 7"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  rmdformats::readthedown:
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE, 
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Read data, functions and packages
+```{r read data}
+
+source("R/ReadPackages.R")
+source("R/Functions.R")
+source("R/ReadData.R")
+source("R/ThemesColors.R")
+source("R/Helpers.R")
+
+```
+
+# Representative rLN image
+```{r create rLN image, fig.height=3}
+
+plots_codex <- list()
+dpi <- 400
+
+rLN <- codex_annotation %>% filter(unique_region== "191_4reg001") %>% 
+  filter(x>500, x<7500) %>% 
+  filter(y>500, y<7500) %>% 
+  mutate(Merged_all_simple=ifelse(Merged_final %in% c("Granulo", "Macro", "DC"), "Myeloid", Merged_final)) %>% 
+  mutate(Merged_all_simple=ifelse(Merged_all_simple %in% c("MC", "NKT", "PC", "NK"), "Other", Merged_all_simple)) %>% 
+  filter(((x-mean(.$x))^2+(y-mean(.$y))^2)<2500^2)
+
+image_rln <- ggplot()+
+  geom_point_rast(data=rLN %>% filter(Merged_all_simple=="B"), aes(x=x,y=y), shape=21, size=0.25, stroke=0, alpha=1, raster.dpi =dpi, 
+                  color=colors_codex[["B"]], fill=colors_codex[["B"]])+
+  geom_point_rast(data=rLN %>% filter(Merged_all_simple!="B"), aes(x=x,y=y, fill=Merged_all_simple, color=Merged_all_simple), 
+                  shape=21, size=0.25, stroke=0, alpha=1, raster.dpi=dpi)+
+  scale_color_manual(values = colors_codex, limits=limits_codex, labels=labels_codex, name=NULL)+
+  scale_fill_manual(values = colors_codex, limits=limits_codex, labels=labels_codex, name=NULL)+
+  guides(fill=guide_legend(nrow = 6, override.aes = list(size=1.5, color="white", stroke=0.1)))+
+  ggtitle(unique(rLN$Entity))+
+  coord_fixed()+
+  theme_void()+
+  theme(legend.position = "right",
+        legend.box.background = element_rect(fill = "black"),
+        legend.box.margin = unit(units = "cm", c(0, 0, 0, -0.25)),
+        legend.spacing.x = unit("cm", x = 0.1),
+        legend.key.height = unit("cm", x = 0.34),
+        legend.key.width = unit("cm", x = 0.2),
+        legend.text = element_text(color="white", size=6.5),
+        plot.title = element_text(color="white", hjust=0.1, size=8, 
+                                  margin = unit(units = "cm", c(0,0,-0.6,0)), face = "bold"),
+        plot.margin = unit(units = "cm", c(0.35, 0.1, 0.1, 0.1)),
+        plot.background = element_rect(fill = "black", color="black"),
+        panel.background = element_rect(fill = "black", color="black"))
+
+image_rln
+
+#ggsave(width = 8, height = 5.5, units = "cm", filename = "Figure7_p1.pdf")
+
+```
+
+## Mini B-cell plot
+```{r mini B cell plot, fig.height=1, eval=FALSE, include=FALSE}
+
+ggplot(rLN %>% filter(Merged_all_simple=="B"), aes(x=x,y=y))+
+  geom_point_rast(raster.dpi = dpi, alpha=0.5, shape=".", color="grey75")+
+  guides(color=guide_legend(override.aes = list(size=2,alpha=0.75)))+
+  scale_y_continuous(expand = c(0,0))+#, limits = c(min(rLN$y), max(rLN$y)+edgeFt))+
+  scale_x_continuous(expand = c(0,0))+#, limits = c(min(rLN$x), max(rLN$x)+edgeFt))+
+  coord_fixed()+
+  mytheme_codex+
+  theme(plot.margin = unit(units = "cm", c(0,0,0,0)))
+
+#ggsave(width = 5, height = 5, units = "cm", filename = "Figure7_mini.pdf")
+
+```
+
+# Neighborhood (NH) plots
+## Load NH analysis and PCA
+```{r neighbourhood analysis}
+
+# Read results from neighborhood analysis
+# Please run file: analysis/NeighborhoodAnalysis.Rmd
+load("output/Neighborhood_results.RData")
+
+# Add codex annotation
+codex_annotation <- left_join(codex_annotation, nn_classes, by="unique_cell_id")
+codex_annotation
+
+```
+
+## In situ NH plot of rLN
+```{r overview nn, fig.height=3.5}
+
+plot_overview <- codex_annotation %>% 
+  filter(unique_region=="191_4reg001") %>% 
+  filter(x>500, x<7500) %>% 
+  filter(y>500, y<7500) %>% 
+  filter(((x-mean(.$x))^2+(y-mean(.$y))^2)<2500^2) %>% 
+  ggplot()+
+  ggrastr::geom_point_rast(aes(x=x,y=y,color=Region, fill=Region), shape=21, size=0.25, stroke=0, alpha=1, raster.dpi =300)+
+  scale_color_manual(values = colors_nn)+
+  scale_fill_manual(values = colors_nn)+
+  guides(color=guide_legend(override.aes = list(size=3)))+
+  coord_fixed()+
+  theme_void()+
+  theme(legend.position = "none",
+        legend.title = element_blank(),
+        legend.text = element_text(size=6),
+        legend.spacing.x = unit("cm", x = 0.1),
+        legend.key.height = unit("cm", x = 0.4),
+        legend.key.width = unit("cm", x = 0.2))
+
+plot_overview
+
+#ggsave(width = 5.3, height = 5.3, units = "cm", filename = "Figure7_p2.pdf")
+
+```
+
+## PCA
+```{r pca nn, fig.height=3.5, fig.width=3.5}
+
+df_loadings <- pca_codex$rotation[c("Stromal cells", "Macro", "B", "TFH", "FDC", "TTOX", "CD4T", "Treg"), c("PC1", "PC2")] %>% 
+  data.frame() %>% mutate(x=0, y=0) %>% 
+  rownames_to_column("Ident")
+
+scaling <- 7.5
+
+plot_pca <- pca_codex$x %>% 
+  data.frame() %>% 
+  rownames_to_column("unique_cell_id") %>% 
+  left_join(., nn_classes) %>% 
+  filter(unique_cell_id %in% rLN$unique_cell_id) %>%
+  sample_frac(0.3) %>% 
+  ggplot(aes(x=PC1, y=PC2))+
+  ggrastr::geom_point_rast(size=0.5, alpha=1, shape=21, stroke=0, aes(color=Region, fill=Region), raster.dpi = 400)+
+  geom_segment(data=df_loadings, aes(x=0, xend=7.5*PC1, y=0, yend=7.5*PC2), 
+               arrow = arrow(type = "closed",  length = unit(units = "cm", 0.1)), size=0.25)+
+  #ggrepel::geom_text_repel(data=df_loadings, aes(x=7.5*PC1, y=7.5*PC2, label=Ident), size=2.5, segment.size=0.25)+
+  guides(color=guide_legend(override.aes = list(size=3, alpha=1)))+
+  scale_color_manual(values = colors_nn)+
+  scale_fill_manual(values = colors_nn)+
+  ylim(-7.5,5)+
+  mytheme_1+
+  #coord_fixed(clip = "off")+
+  theme(legend.position = "none")
+
+plot_pca
+
+#ggsave(width = 5, height = 6.1, units = "cm", filename = "Figure7_p3.pdf")
+
+```
+
+## NH composition
+```{r, include=FALSE}
+
+df_nh <- 
+  codex_annotation %>% 
+  add_prop(vars = c("Region", "Merged_final"), group.vars = 1) %>% 
+  group_by(Merged_final) %>% 
+  dplyr::mutate(Prop=scale(Prop)[,1]) 
+  
+pheat_nh <- df_nh %>% 
+  pivot_wider(names_from = "Merged_final", values_from = "Prop") %>% 
+  column_to_rownames("Region") %>% 
+  pheatmap::pheatmap(silent = T)
+
+plot_nn_rLN <- ggplot(df_nh, aes(x=Merged_final, y=Region, fill=Prop))+
+  geom_tile()+
+  scale_fill_gradientn(colours = colorRampPalette(colors = c("#762a83", "#f7f7f7", "#1b7837"))(100), limits=c(-3, 3),
+                       name="Scaled\nAbundance", breaks=c(-3,-1.5,0,1.5,3))+
+  scale_x_discrete(limits=pheat_nh$tree_col$labels[pheat_nh$tree_col$order], expand = c(0,0),
+                   labels=c("Plasma cells", "Mast cells", "Stromal cells", "Granulocytes", "NK cells", expression('T'[Pr]), 
+                            expression('T'[REG]), expression('Memory T'[TOX]), expression('CD8'^'+'~'naive'), "DC", 
+                            expression('CD4'^'+'~'naive'), expression('Memory T'[H]), "NK T-cells", "Macrophages",
+                            expression('Exh. T'[TOX]), "B cells", "FDC", expression('T'[FH])))+
+  scale_y_discrete(limits=rev(pheat_nh$tree_row$labels[pheat_nh$tree_row$order]), expand = c(0,0), name="Neighborhoods")+
+  geom_vline(xintercept = seq(1.5, 17.5, 1), color="white", size=0.25)+
+  geom_hline(yintercept = seq(1.5, 14.5, 1), color="white", size=0.25)+
+  mytheme_1+
+  coord_cartesian(clip = "off")+
+  theme_bw()+
+  mytheme_1+
+  theme(legend.position = "right",
+    axis.title.x = element_blank(),
+        axis.title.y = element_text(vjust = 11),
+        axis.text.x = element_text(angle=45, hjust=1, size=7),
+        legend.text = element_text(size = 7, color="black"),
+        legend.title = element_text(size = 7, color="black", vjust = 0.8),
+        legend.key.height = unit(0.3, "cm"),
+        legend.key.width = unit(0.3, "cm"),
+        legend.box.spacing = unit(0.1, "cm"),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        plot.tag = element_text(margin = unit(c(0,0.45,0,0), units = "cm")),
+        plot.margin = unit(c(0,0.25,0,0.25), "cm"))+
+  labs(tag = "E")
+
+order_y <- rev(pheat_nh$tree_row$labels[pheat_nh$tree_row$order])
+
+for(i in 1:length(pheat_nh$tree_row$order)) {
+  
+  plot_nn_rLN <- plot_nn_rLN+
+    annotation_custom(grob = rectGrob(gp = gpar( fill=colors_nn[order_y][i], lex=1, col="white")), 
+                      ymin = seq(0.5, length(colors_nn)-0.5, 1)[i], 
+                      ymax = seq(1.5, length(colors_nn)+0.5, 1)[i],
+                      xmin = 0, xmax = -1.1)+
+    annotation_custom(grob = textGrob(label = paste0("N", order_y)[i], gp = gpar(cex=0.5)), 
+                      ymin = seq(0.5, length(colors_nn)-0.5, 1)[i], 
+                      ymax = seq(1.5, length(colors_nn)+0.5, 1)[i],
+                      xmin = 0, xmax = -1.1)
+
+}
+
+```
+
+## NH proportions
+```{r neighborhood composition, fig.height=3}
+
+roi <- c(4,2,1,7)
+
+df_freq_nh <- codex_annotation %>% 
+  left_join(., nn_classes) %>% 
+  add_prop(vars = c("Entity", "Region", "unique_region"), group.vars = 3) %>% 
+  fill_zeros(names_from = "Region", values_from = "Prop") 
+
+pvalues <- df_freq_nh %>% 
+  compare_means(data=., formula = Prop ~ Entity, ref.group = "rLN", 
+                group.by = "Region", p.adjust.method = "BH") %>% 
+  filter(p.adj<0.07) %>% 
+  mutate(p.adj=round(p.adj, 2), Entity=group2) %>% 
+  mutate(p.adj=ifelse(p.adj==0, "< 0.01", as.character(p.adj))) %>% 
+  mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
+  filter(Region %in% roi) %>% 
+  mutate(Region=factor(Region, levels = roi)) %>% 
+  arrange(Region,Entity) %>% 
+  mutate(Y=c(0.68,0.1,0.35,0.55,0.77,0.09,0.18,0.09)) %>% 
+  mutate(Region_nn=paste0("N", Region)) %>% 
+  mutate(Region_nn=factor(Region_nn, levels = paste0("N", roi))) 
+
+# Points to modify facet scales
+d <- data.frame(Entity="rLN", Region=roi, Y=c(0.7, 0.55, 0.79, 0.35)) %>% 
+  mutate(Region=factor(Region, levels = roi)) %>% 
+  mutate(Region_nn=paste0("N", Region)) %>% 
+  mutate(Region_nn=factor(Region_nn, levels = paste0("N", roi))) 
+
+df_medianLines <- df_freq_nh %>%
+  filter(Entity=="rLN") %>% 
+  group_by(Region) %>% 
+  dplyr::summarise(MedianProp=median(Prop)) %>% 
+  filter(Region %in% roi) %>% 
+  mutate(Region=factor(Region, levels = roi)) %>% 
+  mutate(Region_nn=paste0("N", Region)) %>% 
+  mutate(Region_nn=factor(Region_nn, levels = paste0("N", roi))) 
+
+plot_freq_nn <- df_freq_nh %>% 
+  filter(Region %in% roi) %>% 
+  mutate(Region_nn=paste0("N", Region)) %>% 
+  mutate(Region_nn=factor(Region_nn, levels = paste0("N", roi))) %>% 
+  mutate(Region=factor(Region, levels = roi)) %>% 
+  ggplot(aes(x=Entity, y=Prop)) +
+  geom_hline(data=df_medianLines, aes(yintercept=MedianProp),
+             size=0.25, linetype="dashed", color="grey60")+
+  geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
+  ggbeeswarm::geom_beeswarm(size=0.8, shape=21, stroke=0.1, cex = 1.75, aes(fill=Region))+
+  geom_text(data=pvalues, inherit.aes = F, aes(y=Y, x=Entity, label=p.adj), size=2.25)+
+  geom_point(data = d, alpha=0, aes(x=Entity, y=Y))+
+  scale_fill_manual(values = colors_nn)+
+  scale_x_discrete(limits=c("rLN", "DLBCL", "MCL", "FL", "MZL"))+
+  facet_wrap(~Region_nn, strip.position = "right", scales = "free_y")+
+  ylab("% of total area")+
+  mytheme_1+
+  theme(strip.text.y = element_text(angle = 0, size=5.5, margin = unit(units = "cm", c(0.075,0.075,0.075,0.075))),
+        axis.text.x = element_text(angle=45, hjust=1),
+        axis.title.x = element_blank(),
+        plot.margin = unit(c(0,0,0,0.1), "cm"))+
+  labs(tag = "F")
+
+g <- ggplot_gtable(ggplot_build(plot_freq_nn))
+
+g$grobs[[22]]$grobs[[1]]$children[[1]]$gp$fill <- colors_nn["2"]
+g$grobs[[23]]$grobs[[1]]$children[[1]]$gp$fill <- colors_nn["7"]
+g$grobs[[24]]$grobs[[1]]$children[[1]]$gp$fill <- colors_nn["4"]
+g$grobs[[25]]$grobs[[1]]$children[[1]]$gp$fill <- colors_nn["1"]
+
+plot_nn_rLN+wrap_ggplot_grob(g)+plot_layout(widths = c(1.6,1.2))
+
+#ggsave(width = 19, height = 6, units = "cm", filename = "Figure7_p4.pdf")
+
+```
+
+# B-NHL examples
+## Cells colored by NH
+```{r, fig.height=3}
+
+regions_nn <- c("191_2reg006", "191_3reg003", "191_4reg002")
+names(regions_nn) <- c("MCL", "FL", "DLBCL")
+plot_nn <- list()
+
+for(r in regions_nn){
+  df_tmp <- codex_annotation %>% 
+    filter(unique_region==r) %>% 
+    filter(x>500, x<7500) %>% 
+    filter(y>500, y<7500) %>% 
+    filter(((x-mean(.$x))^2+(y-mean(.$y))^2)<2500^2)
+    
+plot_nn[[r]] <- df_tmp %>% 
+    ggplot()+
+    geom_point(data = data.frame(x=min(df_tmp$x)+2500, y=min(df_tmp$y)+2500), stroke=2,
+                             aes(x=x,y=y), shape=21, color="white", fill="white", size=72.5)+
+    ggrastr::geom_point_rast(aes(x=x,y=y,color=Region, fill=Region), shape=21, size=0.25, stroke=0, alpha=1, raster.dpi = 400)+
+    scale_color_manual(values = colors_nn)+
+    scale_fill_manual(values = colors_nn)+
+    guides(color=guide_legend(override.aes = list(size=3)))+
+    coord_fixed(clip = "off")+
+    theme_void()+
+    theme(legend.position = "none",
+          legend.title = element_blank(),
+          plot.background = element_rect(fill=NA, color=NA),
+          legend.text = element_text(size=6),
+          legend.spacing.x = unit("cm", x = 0.1),
+          legend.key.height = unit("cm", x = 0.4),
+          legend.key.width = unit("cm", x = 0.2))
+  
+#ggsave(plot_nn[[r]], width = 6, height = 6, units = "cm", filename = paste("Figure7_", r, ".pdf"))
+}
+
+plot_nn
+
+```
+
+## Cells colored by subset
+```{r, fig.height=3}
+
+regions_nn <- c("191_2reg006", "191_3reg003", "191_4reg002")
+names(regions_nn) <- c("MCL", "FL", "DLBCL")
+df_images <- list()
+images <- list()
+
+margins <- c(0.1, 0, 0.4, -0.5)
+dpi <- 600
+
+for(r in 1:3){
+
+df_images[[r]] <- codex_annotation %>% 
+  filter(unique_region==regions_nn[r]) %>% 
+  filter(x>500, x<7500) %>% 
+  filter(y>500, y<7500) %>% 
+  mutate(Merged_all_simple=ifelse(Merged_final %in% c("Granulo", "Macro", "DC"), "Myeloid", Merged_final)) %>% 
+  mutate(Merged_all_simple=ifelse(Merged_all_simple %in% c("PC", "MC", "NK", "NKT"), "Other", Merged_all_simple)) %>% 
+  filter(((x-mean(.$x))^2+(y-mean(.$y))^2)<2500^2)
+
+images[[r]] <- 
+  ggplot()+
+  geom_point_rast(data=df_images[[r]] %>% filter(Merged_all_simple=="B"), aes(x=x,y=y), 
+                  shape=21, size=0.25, stroke=0, alpha=1, raster.dpi =dpi, 
+                  color=colors_codex[["B"]], fill=colors_codex[["B"]])+
+  geom_point_rast(data=df_images[[r]] %>% filter(Merged_all_simple!="B"), 
+                  aes(x=x,y=y, fill=Merged_all_simple, color=Merged_all_simple), 
+                  shape=21, size=0.25, stroke=0, alpha=1, raster.dpi=dpi)+
+  scale_color_manual(values = colors_codex, limits=limits_codex, labels=labels_codex, name="Cell type")+
+  scale_fill_manual(values = colors_codex, limits=limits_codex, labels=labels_codex, name="Cell type")+
+  ggtitle(unique(df_images[[r]]$Entity))+
+  coord_fixed()+
+  theme_void()+
+  theme(legend.position = "none",
+        plot.title = element_text(color="white", hjust=0.1, size=10, 
+                                  margin = unit(units = "cm", c(0,0,-1,0)), face = "bold"),
+        plot.margin = unit(units = "cm", margins),
+        panel.background = element_rect(fill = "black", color="black"),
+        plot.background =  element_rect(fill = "black", color="black"))
+
+}
+
+#images
+
+emptyplot <- ggplot()+
+  geom_point_rast(data=df_images[[1]] %>% filter(Merged_final=="BC"), aes(x=x,y=y), raster.dpi = dpi, shape=".",
+                  color=colors_codex[["B"]])+
+  coord_fixed()+
+  mytheme_codex+
+  theme(panel.background = element_rect(fill = "black", color="black"),
+        plot.background =  element_rect(fill = "black", color="black"))
+
+p_full <- images[[3]]+emptyplot+images[[1]]+emptyplot+images[[2]]+emptyplot+plot_layout(widths = c(1,0.1,1,0.1,1,0.3))
+p_full
+
+#ggsave(p_full, width = 22.5, height = 6, units = "cm", filename = "Figure7_mini.pdf")
+
+```
+
+## Legend
+```{r, fig.height=1}
+
+plot.legend <- images[[r]]+
+ guides(fill=guide_legend(nrow = 1, override.aes = list(size=1.75, color="white", stroke=0.25)))+
+ guides(color=guide_legend(nrow = 1, override.aes = list(size=1.75, color="white", stroke=0.25)))+
+ theme(legend.position = "bottom",
+       legend.title = element_blank(),
+        legend.box.background = element_rect(fill = "black"),
+        legend.box.margin = unit(units = "cm", c(0, 0, 0, 0)),
+        legend.spacing.x = unit("cm", x = 0.1),
+        legend.key.height = unit("cm", x = 0.34),
+        legend.key.width = unit("cm", x = 0.16),
+        plot.margin = unit(units = "cm", c(0,0,0,0)),
+        plot.background = element_rect(fill = "black", color="black"),
+        panel.background = element_rect(fill = "black", color="black"),
+        legend.text = element_text(color="white", size=6.5))
+  
+as_ggplot(get_legend(plot.legend))
+#ggsave(width = 19, height = 1, units = "cm", filename = "Figure7_legend.pdf")
+
+```
+
+# Closest cells to B-cells
+```{r fig.height=2.2}
+
+codex_freq <- codex_annotation %>% 
+  add_prop(vars = c("unique_region", "Merged_final"), group.vars = 1)
+
+nn <- run_NNanalysis(data = codex_annotation, regions = unique(codex_annotation$unique_region), 
+                     plan_session = "multisession", 
+                     add.prop=FALSE,
+                     n_workers = 10, 
+                     nn = 1)
+
+nn_sum <- 
+  nn %>% select(-name) %>% 
+  left_join(codex_annotation %>% select(unique_cell_id, unique_region)) %>% 
+  left_join(codex_annotation %>% select(unique_cell_id, Ident_center=Merged_final)) %>% 
+  filter(Ident_center=="B", ) %>% 
+  add_prop(vars = c("unique_region", "Merged_final"), group.vars = 1) %>% 
+  mutate(Prop=100*Prop) %>% 
+  left_join(., codex_annotation %>% select(unique_region, Entity) %>% distinct)
+  
+
+art_max <- c(20, 14, 11, 12)
+names(art_max) <- c("rLN", "DLBCL", "MCL", "FL")
+plot_nn <- list()
+
+for(e in names(art_max)){
+  
+  selected <- 
+    nn_sum %>% filter(Entity==e) %>% 
+    group_by(Merged_final) %>% 
+    summarise(Mean=mean(Prop), SEM=sd(Prop)/sqrt(length(Prop))) %>% 
+    top_n(Mean, n = 11) %>% 
+    mutate(code=Merged_final=="FDC") %>% 
+    mutate(SEM=ifelse(Mean>art_max[e], NA, SEM)) %>% 
+    mutate(Mean_new=ifelse(Mean>art_max[e], art_max[e], Mean)) 
+  
+plot_nn[[e]] <- selected %>% 
+    ggplot(aes(x=reorder(Merged_final, -Mean_new), y=Mean_new, fill=Merged_final, color=code))+
+    geom_errorbar(aes(ymin=Mean_new, ymax=Mean_new+SEM), width=0.2, color="black", size=0.25)+
+    geom_bar(stat = "identity", size=0.5, width=0.5, fill="white", color="white")+
+    geom_bar(stat = "identity", size=0.25, width=0.5, alpha=0.6)+
+    annotation_custom(grob = textGrob(label = e, just = "right", x = 0.92, y=0.9, gp = gpar(cex=0.6)))+
+    geom_segment(inherit.aes = F, 
+                 aes(x=1, xend=1, y=1.02*Mean_new[1], yend=1.14*Mean_new[1]), 
+                 color="black", size=0.15,
+                 arrow = arrow(type = "closed", length = unit(units = "cm", 0.1)))+
+    geom_text(aes(x=2, y=1.08*Mean_new[1], label=round(Mean[1],1)), 
+              check_overlap = T, size=2.25, color="black")+
+    scale_color_manual(values = c("white", "black"), limits=c(F, T))+
+    scale_fill_manual(values = colors_codex_exp)+
+    scale_x_discrete(labels=unlist(labels_codex_exp))+
+    scale_y_continuous(name = "% of cells closest\nto B-cells")+
+    mytheme_1+
+    theme(legend.position = "none",
+          axis.text.x = element_text(angle=45, hjust=1, size=6),
+          plot.background = element_rect(fill = NA, colour = NA),
+          panel.background = element_rect(fill = NA, colour = NA),
+          plot.margin = unit(c(0,0.1,0,0), "cm"),
+          axis.title.x = element_blank())
+  
+  if(e!="rLN") {
+    plot_nn[[e]] <- plot_nn[[e]]+
+      theme(axis.title.y = element_blank())}
+}
+
+plot_nn$rLN+labs(tag = "G")+plot_nn$DLBCL+
+  plot_nn$MCL+plot_nn$FL+
+  plot_layout(nrow = 1)
+
+#ggsave(width = 19, height = 5, units = "cm", filename = "Figure7_p5.pdf")
+
+```
+
+# Session info
+```{r}
+
+sessionInfo()
+
+```

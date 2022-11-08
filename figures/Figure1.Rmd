@@ -1,0 +1,395 @@
+---
+title: "Figure 1"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  rmdformats::readthedown: 
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Read data, functions and packages
+```{r read data}
+
+source("R/ReadPackages.R")
+source("R/Functions.R")
+source("R/ReadData.R")
+source("R/ThemesColors.R")
+source("R/Helpers.R")
+
+```
+
+# UMAP plot
+```{r umap plot}
+
+# Fine tuning for labels
+median_umap <- df_comb %>% 
+  group_by(IdentI) %>% 
+  summarise(Median1=median(wnnUMAP_1), Median2=median(wnnUMAP_2)) %>% 
+  mutate(Code=ifelse(IdentI %in% c(15, 18, 11, 6, 4), T, F)) %>% 
+  mutate(Median2=ifelse(IdentI %in% 6, Median2+0.5, Median2)) %>% 
+  mutate(Median2=ifelse(IdentI %in% 9, Median2+0.75, Median2)) %>% 
+  mutate(Median1=ifelse(IdentI %in% 9, Median1-1, Median1)) %>% 
+  mutate(Median2=ifelse(IdentI %in% 14, Median2+0.6, Median2)) %>% 
+  mutate(Median1=ifelse(IdentI %in% 14, Median1-1.75, Median1)) %>% 
+  mutate(IdentI=factor(IdentI, levels = cluster_order)) %>% 
+  left_join(., data.frame(IdentI=factor(cluster_order), IdentI_label=seq(1:14)))
+
+# Set origin for 'frameless' umap
+ori <- c(-8.25,-8.5)
+l <- 3
+off <- 1
+
+plot_umap <- df_comb %>% 
+  ggplot(aes(x=wnnUMAP_1, y=wnnUMAP_2, fill=as.factor(IdentI)))+
+  ggrastr::geom_point_rast(size=0.35, stroke=0, shape=21, raster.dpi = 200, alpha=0.75)+
+  geom_text(data=median_umap, aes(x=Median1, color=Code, y=Median2, label=paste0("C", IdentI_label)), 
+            size=2.25, fontface="bold")+
+  scale_color_manual(values = c("black", "grey96"), guide="none")+
+  scale_fill_manual(values = colors_umap_cl, limits=factor(cluster_order), labels=unlist(labels_cl))+
+  scale_x_continuous(limits = c(ori[1],10), expand = c(0,0))+
+  scale_y_continuous(limits = c(ori[2],10), expand = c(0,0))+
+  annotation_custom(grob = linesGrob(gp=gpar(fill="black", lex=0.25), 
+                                     arrow = arrow(ends = "last", type="closed", length=unit(0.15, "cm"))), 
+                    xmin = ori[1]+off, xmax = ori[1]+off+l, ymin=ori[2]+off, ymax=ori[2]+off)+
+  annotation_custom(grob = linesGrob(gp=gpar(fill="black", lex=0.25), 
+                                     arrow = arrow(ends = "last", type="closed", length=unit(0.15, "cm"))), 
+                    ymin = ori[2]+off, ymax = ori[2]+off+l, xmin=ori[1]+off, xmax=ori[1]+off)+
+  annotation_custom(grob = textGrob(label = "wnnUMAP-1", gp = gpar(cex=0.5)), 
+                    xmin = ori[1]+off+l/2, xmax = ori[1]+off+l/2, ymin=ori[2]+off/3, ymax=ori[2]+off/3)+
+  annotation_custom(grob = textGrob(label = "wnnUMAP-2", gp = gpar(cex=0.5), rot = 90), 
+                    xmin=ori[1]+off/3, xmax=ori[1]+off/3, ymin=ori[2]+off+l/2, ymax=ori[2]+off+l/2)+
+    
+  coord_fixed(clip = "off")+
+  theme_void()+
+  theme(legend.position = "none")
+
+plot_umap
+
+#ggsave(plot_umap, filename = "Figure1_p1.pdf", width = 8.25, height = 7.25, units = "cm")
+
+```
+
+# Gene expression
+## Selected genes 
+```{r genes}
+
+genes_selected <- 
+  c("MKI67",
+    "CCR7", 
+    "KLF2",
+    "TCF7", 
+    "TOX",
+    "TOX2", 
+    "ASCL2",
+    "FOXP3", 
+    "IKZF3",
+    "GZMA", 
+    "GZMK", 
+    "CCL5", 
+    "NKG7")
+
+```
+
+## Plot
+```{r gene expression}
+
+DefaultAssay(Combined_T) <- "integratedRNA"
+
+perc_expr <- 
+  FetchData(Combined_T, slot = "counts", vars = c("IdentI", paste0("rna_", genes_selected))) %>% 
+  mutate(IdentI=as.factor(IdentI)) %>% 
+  mutate_if(.predicate = is.numeric, .funs = ~ifelse(isZero(.), 1, 0)) %>% 
+  pivot_longer(cols = 2:ncol(.), names_to = "Gene") %>% 
+  group_by(IdentI, Gene) %>% 
+  count(value) %>% 
+  mutate(Prop=n/sum(n)) %>% 
+  filter(value==0) %>% 
+  select(-value, -n) %>% 
+  mutate(Gene=substr(Gene, 5, nchar(.)))
+
+DefaultAssay(Combined_T) <- "integratedRNA"
+
+plot_genex <- 
+  FetchData(Combined_T, slot = "data", vars = c("IdentI", paste0(genes_selected))) %>% 
+  mutate(IdentI=factor(IdentI, levels = rev(cluster_order))) %>% 
+  group_by(IdentI) %>% 
+  summarise_all(mean) %>% 
+  pivot_longer(cols = 2:ncol(.), names_to = "Gene") %>% 
+  group_by(Gene) %>% 
+  mutate(value=(value-min(value))/(max(value)-min(value))) %>% 
+  left_join(., perc_expr) %>% 
+  ggplot(aes(x=Gene, y=IdentI, size=100*Prop, fill=value))+
+  geom_point(shape=21, stroke=0.1, color="grey45")+ 
+  scale_size_continuous(range=c(0, 3), name="% pos. cells", limits=c(0, 100))+
+  scale_fill_gradientn(name="Expression", colours = brewer.pal(5, "BuGn"), limits=c(0,1))+
+  scale_y_discrete(limits=factor(rev(cluster_order)), labels=rev(unlist(labels_cl)))+
+  scale_x_discrete(limits=genes_selected)+
+  geom_hline(yintercept = c(1.5, 5.5, 9.5, 10.5, 13.5), linetype="solid", size=0.25, alpha=0.1)+
+  ggtitle("RNA level")+
+  coord_cartesian(clip = "off")+
+  theme_bw()+
+  mytheme_1+
+  theme(axis.title = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1, size=6.5),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        plot.margin = unit(c(0.25,0.35,0,2), "cm"))
+
+lines <- c(1, 5, 9, 10, 13, 14)
+
+for(i in 1:length(cluster_order)) {
+  
+  plot_genex <- plot_genex+
+   annotation_custom(grob = rectGrob(gp = gpar(fill=colors_umap_cl[as.character(rev(cluster_order)[i])], lex=1, col="white")), 
+                    ymin = seq(0.5, length(cluster_order)-0.5, 1)[i], 
+                    ymax = seq(1.5, length(cluster_order)+0.5, 1)[i],
+                    xmin = 0, xmax = -1.2)+
+   annotation_custom(grob = textGrob(label = paste0("C", c(14:1)[i]), gp = gpar(cex=0.45, col=ifelse(i %in% c(6,7,11,14), "white", "black"))),
+                    ymin = seq(0.5, length(cluster_order)-0.5, 1)[i], 
+                    ymax = seq(1.5, length(cluster_order)+0.5, 1)[i],
+                    xmin = 0, xmax = -1.2)
+}
+
+for(i in 1:length(lines)) {
+  
+  plot_genex <- plot_genex+
+    annotation_custom(grob = textGrob(label = rev(labels_celltypes_expr)[[i]], rot = 0, hjust = 1, gp = gpar(cex=0.7)), 
+                      ymin = c(0,lines)[i]+0.5,
+                      ymax = c(lines)[i]+0.5,
+                      xmin = -1.45, xmax = -1.45)+
+    annotation_custom(grob = linesGrob(gp = gpar(col="white", lex=3)),
+                      ymin = c(0,lines)[i]+0.5,
+                      ymax = c(0,lines)[i]+0.5,
+                      xmin = -0.01, xmax = -1.2)
+}
+
+plot_genex <- plot_genex+labs(tag = "B")+
+ theme(plot.tag.position = c(-0.25,1))
+
+```
+
+# Protein expression
+## Selected proteins
+```{r proteins}
+
+proteins_selected <- 
+  c("CD4"="CD4", 
+    "CD8a"="CD8a", 
+    "CD45RA"="CD45RA", 
+    "CD45RO"="CD45RO", 
+    "CD95"="CD95", 
+    "CD62L"="CD62L", 
+    "CD127"="CD127", 
+    "CD69"="CD69", 
+    "CD38"="CD38", 
+    "CD25"="CD25", 
+    "ICOS"="CD278", 
+    "CXCR5"="CD185", 
+    "CD31"="CD31", 
+    "KLRG1"="KLRG1", 
+    "CD244"="CD244", 
+    "PD1"="CD279", 
+    "TIM3"="CD366"
+    )
+
+```
+
+## Plot
+```{r protein expression}
+
+plot_protex <- 
+  left_join(percentageADT, meanADT) %>% 
+  filter(Epitope %in% proteins_selected) %>% 
+  ggplot(aes(x=Epitope, y=IdentI, size=100*Prop, fill=Expression))+
+  geom_point(shape=21, stroke=0.1, color="grey45")+ 
+  geom_hline(yintercept = c(1.5, 5.5, 9.5, 10.5, 13.5), linetype="solid", size=0.25, alpha=0.1)+
+  scale_size_continuous(range=c(0, 3), name="% pos. cells", limits=c(0, 100))+
+  scale_fill_gradientn(name="Expression", colours = brewer.pal(5, "BuGn"), limits=c(0,1))+
+  scale_y_discrete(limits=factor(rev(cluster_order)), labels=rev(unlist(labels_cl)))+
+  scale_x_discrete(limits=proteins_selected, labels=names(proteins_selected))+
+  ggtitle("Protein level")+
+  coord_cartesian(clip = "off")+
+  theme_bw()+
+  mytheme_1+
+  theme(axis.title = element_blank(),
+        legend.position = "right",
+        axis.text.x = element_text(angle = 45, hjust = 1, size=6.5),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.text = element_text(size = 7, color="black"),
+        legend.title = element_text(size = 7, color="black", vjust = 0.8),
+        legend.key.height = unit(0.3, "cm"),
+        legend.key.width = unit(0.3, "cm"),
+        legend.box.spacing = unit(0.1, "cm"),
+        plot.margin = unit(c(0.25,0,0,0.15), "cm"),
+        plot.tag.position = c(-0.025,1))+
+        labs(tag = "C")
+
+```
+
+# Assemble plot
+```{r assemble plot, fig.height=4}
+
+plot_genex+plot_protex+plot_layout(widths = c(1, 1.25))
+
+#ggsave(filename = "Figure1_p2.pdf", width = 16, height = 7.9, units = "cm")
+
+```
+
+# TF activity
+## Selected TFs
+```{r tfs}
+
+tfs_selected <- c("TCF7"="tfactivity_TCF7-E",  
+                  "FOXP3"="tfactivity_FOXP3-E",
+                  "ASCL2"="tfactivity_ASCL2-E", 
+                  "KLF2"="tfactivity_KLF2-E")
+
+```
+
+## Plot
+```{r tf activity, fig.height=4}
+
+df_tfs <- 
+  FetchData(Combined_T, vars = c("Barcode_full", unname(tfs_selected))) %>% 
+  left_join(df_comb %>% select(IdentI, Barcode_full, CellType), .) %>% 
+  pivot_longer(cols =4:ncol(.)) %>% 
+  mutate(name=gsub(name, pattern = "tfactivity_|-E", replacement = "")) %>% 
+  mutate(name=factor(name, levels = names(tfs_selected))) %>% 
+  group_by(name, IdentI) %>% 
+  summarise(Mean=mean(value, na.rm=T)) %>% 
+  group_by(name) %>% 
+  mutate(Mean=2*((Mean-min(Mean))/(max(Mean)-min(Mean)))-1) 
+
+plot_tfact <- 
+  ggplot(df_tfs, aes(y=as.character(IdentI), x=name, fill=Mean))+
+  geom_tile()+ 
+  scale_fill_gradientn(name="TF activity", colours = colorRampPalette(colors = c("#762a83", "#f7f7f7", "#1b7837"))(100))+
+  geom_vline(xintercept = seq(1.5, 4.5, 1), color="white", size=0.25)+
+  geom_hline(yintercept = seq(1.5, 14.5, 1), color="white", size=0.25)+
+  scale_y_discrete(limits=rev(factor(cluster_order)), expand = c(0,0))+
+  scale_x_discrete(expand = c(0,0))+
+  ggtitle("TF activity")+
+  coord_fixed(clip = "off")+
+  theme_bw()+
+  mytheme_1+
+  theme(axis.title = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1, size=6.5),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.border = element_rect(size=0.25),
+        plot.background = element_rect(fill = NA, color=NA),
+        legend.position = "right",
+        legend.text = element_text(size = 7, color="black"),
+        legend.key.height = unit(0.3, "cm"),
+        legend.key.width = unit(0.3, "cm"),
+        legend.box.spacing = unit(0.1, "cm"),
+        plot.margin = unit(c(0.25,0,0,0.65), "cm"),
+        plot.tag.position = c(-0.2,1))+
+        labs(tag = "D")
+
+lines <- c(1, 5, 9, 10, 13, 14)
+
+for(i in 1:length(cluster_order)) {
+  
+  plot_tfact <- plot_tfact+
+   annotation_custom(grob = rectGrob(gp = gpar(fill=colors_umap_cl[as.character(rev(cluster_order)[i])], lex=1, col="white")), 
+                    ymin = seq(0.5, length(cluster_order)-0.5, 1)[i], 
+                    ymax = seq(1.5, length(cluster_order)+0.5, 1)[i],
+                    xmin = 0, xmax = -1.2)+
+   annotation_custom(grob = textGrob(label = paste0("C", c(14:1)[i]), gp = gpar(cex=0.45, col=ifelse(i %in% c(6,7,11,14), "white", "black"))),
+                    ymin = seq(0.5, length(cluster_order)-0.5, 1)[i], 
+                    ymax = seq(1.5, length(cluster_order)+0.5, 1)[i],
+                    xmin = 0, xmax = -1.2)
+}
+
+for(i in 1:length(lines)) {
+  
+  plot_tfact <- plot_tfact+
+    annotation_custom(grob = linesGrob(gp = gpar(col="white", lex=3)),
+                      ymin = c(0,lines)[i]+0.5,
+                      ymax = c(0,lines)[i]+0.5,
+                      xmin = -0.01, xmax = -1.2)
+}
+
+plot_tfact
+
+#ggsave(plot_tfact, filename = "Figure1_p3.pdf", width = 5, height = 7.35, units = "cm")
+
+```
+
+# Dendrogram
+```{r dendrogram}
+
+# Dendrogramm CITEseq
+data <- data.frame(
+  level1="_Tcells",
+  level2=c("_'T'[Pr]",
+           rep("_'T'[H]",3),  
+           "_'T'[FH]", 
+           rep("_'T'[REG]",4),  
+           rep("_'T'[TOX]",4), 
+           "_'T'[DN]"),
+  level3=c("_'T'[Pr]", 
+           "TH_'CD4'^'+'*' Naive'",
+           "TH_'CM'[1]", 
+           "TH_'CM'[2]", 
+           "_'T'[FH]",  
+           "TREG_'CM'[1]", 
+           "TREG_'CM'[2]", 
+           "TREG_'EM'[1]", 
+           "TREG_'EM'[2]", 
+           "TTOX_'CD8'^'+'*' Naive'",
+           "TTOX_'EM'[1]",
+           "TTOX_'EM'[2]",
+           "TTOX_'EM'[3]",
+           "_'T'[DN]")
+)
+
+dim <- 0.5
+
+edges_level1_2 <- data %>% select(level1, level2) %>% unique %>% rename(from=level1, to=level2)
+edges_level2_3 <- data %>% select(level2, level3) %>% unique %>% rename(from=level2, to=level3)
+edge_list=rbind(edges_level1_2, edges_level2_3)
+
+vert <- data.frame(
+  name=unique(c(data$level1, data$level2, data$level3))) %>% 
+  mutate(cluster=as.character(c(NA, 14, 'TH', 6, 'TREG', "TTOX", 19, 1, 2, 9, 8, 13, 15, 11, 12, 3, 16, 5))) %>% 
+  mutate(label=strsplit(name, split = "_") %>% sapply(., "[[", 2)) %>% 
+  mutate(alpha=c(0,1,1,1,1,1,dim,1,dim,dim,dim,dim,dim,dim,1,dim,dim,1))
+
+mygraph_cite <- graph_from_data_frame( edge_list ,vertices = vert)
+
+plot_dendrogramm <- ggraph(mygraph_cite, layout = 'tree', circular = FALSE)+ 
+  geom_edge_diagonal(strength = 1.4, edge_width=0.25)+
+  geom_node_label(aes(label=label, color=cluster), 
+                  parse = T, nudge_y=-0.1, label.padding =  unit(units = "cm", 0.2),
+                  size=2.75, label.size = 0, label.r = unit(units = "cm", 0))+
+  scale_color_manual(values = colors_umap_cl)+
+  theme_void()+
+  theme(legend.position = "none")
+
+plot_dendrogramm
+
+#ggsave(plot_dendrogramm, filename = "Figure1_p4.pdf", device = "pdf", width = 17.5, height = 3.5, units = "cm")
+
+```
+
+# Session info
+```{r session info}
+
+sessionInfo()
+
+```

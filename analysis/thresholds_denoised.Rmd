@@ -1,0 +1,1620 @@
+---
+title: "Determine thresholds for protein expression"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  rmdformats::readthedown
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE, cache.lazy = FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE, fig.height = 6.5)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Load packages and functions
+```{r Load packages and functions}
+
+library(Seurat)
+library(tidyverse)
+library(readxl)
+library(ggpubr)
+library(ggrastr)
+source("R/Functions.R")
+
+thresh <- list()
+
+mytheme <- 
+  theme_bw()+
+  theme(panel.grid = element_blank())
+
+```
+
+# Read and handle data
+```{r read data}
+
+Combined_T <- readRDS("output/Tcells_Integrated.rds")
+df <- readRDS("data/denoised_protein_totalVI.rds")
+meta_protein <- readRDS("data/meta_protein_totalVI.rds")
+
+df <- left_join(df, meta_protein %>% select(Barcode_full, log10_prot_size))
+
+df <- df %>% left_join(., FetchData(Combined_T, vars=c("Barcode_full", "IdentI")), by="Barcode_full")
+colnames(df) <- gsub(colnames(df), pattern = "_TotalA", replacement = "")
+df <- filter(df, !is.na(IdentI))
+df <- sample_frac(df, 0.25)
+
+```
+
+# Marker
+## CD2
+```{r}
+
+thresh_tmp <- 75
+epitope <- "CD2"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=700, y=4, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD2 <- thresh_tmp
+
+```
+
+## CD3
+```{r}
+
+thresh_tmp <- 75
+epitope <- "CD3"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=500, y=4, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD3 <- thresh_tmp
+
+```
+
+## CD4
+```{r}
+
+thresh_tmp <- 90
+epitope <- "CD4"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=500, y=4, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD4 <- thresh_tmp
+
+```
+
+## CD5
+```{r}
+
+thresh_tmp <- 125
+epitope <- "CD5"
+
+df_tmp <- df %>% 
+   drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=700, y=4, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD5 <- thresh_tmp
+
+```
+
+## CD7
+```{r}
+
+thresh_tmp <- 100
+epitope <- "CD7"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=750, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 1000)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD7 <- thresh_tmp
+
+```
+
+## CD8a
+```{r}
+
+thresh_tmp <- 35
+epitope <- "CD8a"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=200, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 250)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD8a <- thresh_tmp
+
+```
+
+## CD10
+```{r}
+
+thresh_tmp <- 15
+epitope <- "CD10"
+ 
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.35, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=65, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 75)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD10 <- thresh_tmp
+
+```
+
+## CD103
+```{r}
+
+thresh_tmp <- 10
+epitope <- "CD103"
+ 
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=50, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 75)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD103 <- thresh_tmp
+
+```
+
+## CD11b
+```{r}
+
+thresh_tmp <- 15
+epitope <- "CD11b"
+ 
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 100)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD11b <- thresh_tmp
+
+```
+
+## CD11c
+```{r}
+
+thresh_tmp <- 40
+epitope <- "CD11c"
+ 
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 100)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD11c <- thresh_tmp
+
+```
+
+## CD127
+```{r}
+
+thresh_tmp <- 35
+epitope <- "CD127"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 150)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD127 <- thresh_tmp
+
+```
+
+## CD134
+```{r}
+
+thresh_tmp <- 22.5
+epitope <- "CD134"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 120)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD134 <- thresh_tmp
+
+```
+
+## CD137
+```{r}
+
+thresh_tmp <- 12.5
+epitope <- "CD137"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 120)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+
+thresh$CD137 <- thresh_tmp
+
+```
+
+## CD150
+```{r}
+
+thresh_tmp <- 20
+epitope <- "CD150"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 70)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD150 <- thresh_tmp
+
+```
+
+## CD152
+```{r}
+
+thresh_tmp <- 10
+epitope <- "CD152"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 40)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD152 <- thresh_tmp
+
+```
+
+## CD16
+```{r}
+
+thresh_tmp <- 15
+epitope <- "CD16"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 70)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+
+thresh$CD16 <- thresh_tmp
+
+```
+
+## CD161
+```{r}
+
+thresh_tmp <- 10
+
+epitope <- "CD161"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.2, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=30, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 50)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD161 <- thresh_tmp
+
+```
+
+## CD183
+```{r}
+
+thresh_tmp <- 15
+epitope <- "CD183"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.4, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 85)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+
+thresh$CD183 <- thresh_tmp
+
+```
+
+## CD184
+```{r}
+
+thresh_tmp <- 7.5
+epitope <- "CD184"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 85)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD184 <- thresh_tmp
+
+```
+
+
+## CD185
+```{r}
+
+thresh_tmp <- 20
+epitope <- "CD185"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.4, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=60, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 70)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD185 <- thresh_tmp
+
+```
+
+## CD19
+```{r}
+
+thresh_tmp <- 25
+epitope <- "CD19"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 70)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD19 <- thresh_tmp
+
+```
+
+## CD194
+```{r}
+
+thresh_tmp <- 15
+epitope <- "CD194"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=50, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 70)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD194 <- thresh_tmp
+
+```
+
+## CD195
+```{r}
+
+thresh_tmp <- 5
+epitope <- "CD195"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 50)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD195 <- thresh_tmp
+
+```
+
+## CD197
+```{r}
+
+thresh_tmp <- 7.5
+epitope <- "CD197"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=25, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 30)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD197 <- thresh_tmp
+
+```
+
+## CD20
+```{r}
+
+thresh_tmp <- 35
+epitope <- "CD20"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=50, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 100)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD20 <- thresh_tmp
+
+```
+
+## CD21
+```{r}
+
+thresh_tmp <- 40
+epitope <- "CD21"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 100)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD21 <- thresh_tmp
+
+```
+
+## CD22
+```{r}
+
+thresh_tmp <- 30
+epitope <- "CD22"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 70)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD22 <- thresh_tmp
+
+```
+
+## CD223
+```{r}
+
+thresh_tmp <- 7.5
+epitope <- "CD223"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=40, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 50)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD223 <- thresh_tmp
+
+```
+
+## CD23
+```{r}
+
+thresh_tmp <- 20
+
+df %>% 
+  #drop_na() %>%
+  ggplot(aes(x=CD23, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 75)+
+  mytheme
+
+thresh$CD23 <- thresh_tmp
+
+```
+
+## CD24
+```{r}
+
+thresh_tmp <- 20
+
+df %>% 
+
+  ggplot(aes(x=CD24, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 75)+
+  mytheme
+
+thresh$CD24 <- thresh_tmp
+
+```
+
+## CD244
+```{r}
+
+thresh_tmp <- 30
+
+epitope <- "CD244"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=75, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 200)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD244 <- thresh_tmp
+
+```
+
+## CD25
+```{r}
+
+thresh_tmp <- 75
+epitope <- "CD25"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=200, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 400)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD25 <- thresh_tmp
+
+```
+
+## CD27
+```{r}
+
+thresh_tmp <- 150
+epitope <- "CD27"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=500, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 750)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD27 <- thresh_tmp
+
+```
+
+## CD273
+```{r}
+
+thresh_tmp <- 15
+
+df %>% 
+  #drop_na() %>%
+
+  ggplot(aes(x=CD273, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  ##xlim(0, 200)+
+  mytheme
+
+thresh$CD273 <- thresh_tmp
+
+```
+
+## CD274
+```{r}
+
+thresh_tmp <- 15
+
+df %>% 
+  #drop_na() %>%
+
+  ggplot(aes(x=CD274, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 50)+
+  mytheme
+
+thresh$CD274 <- thresh_tmp
+
+```
+
+## CD279
+```{r}
+
+thresh_tmp <- 110
+epitope <- "CD279"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.4)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=750, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 1300)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD279 <- thresh_tmp
+
+```
+
+## CD278
+```{r}
+
+thresh_tmp <- 200
+
+df %>% 
+  drop_na() %>%
+
+  ggplot(aes(x=CD278, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 1000)+
+  mytheme
+
+thresh$CD278 <- thresh_tmp
+
+```
+
+## CD28
+```{r}
+
+thresh_tmp <- 30
+
+df %>% 
+  #drop_na() %>%
+  ggplot(aes(x=CD28, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 200)+
+  mytheme
+
+thresh$CD28 <- thresh_tmp
+
+```
+
+## CD29
+```{r}
+
+thresh_tmp <- 60
+
+df %>% 
+  drop_na() %>%
+
+  ggplot(aes(x=CD29, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 200)+
+  mytheme
+
+thresh$CD29 <- thresh_tmp
+
+```
+
+## CD31
+```{r}
+
+thresh_tmp <- 100
+
+df %>% 
+  drop_na() %>%
+
+  ggplot(aes(x=CD31, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 200)+
+  mytheme
+
+thresh$CD31 <- thresh_tmp
+
+```
+
+## CD32
+```{r}
+
+thresh_tmp <- 20
+
+df %>% 
+  drop_na() %>%
+
+  ggplot(aes(x=CD32, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 50)+
+  mytheme
+
+thresh$CD32 <- thresh_tmp
+
+```
+
+## CD357
+```{r}
+
+thresh_tmp <- 7.5
+
+df %>% 
+  drop_na() %>%
+
+  ggplot(aes(x=CD357, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 50)+
+  mytheme
+
+thresh$CD357 <- thresh_tmp
+
+```
+
+## CD366
+```{r}
+
+thresh_tmp <- 20
+epitope <- "CD366"
+
+df_tmp <- df %>% 
+  drop_na() %>% 
+  mutate(isPos=!!sym(epitope)>thresh_tmp) %>% 
+  add_prop(keep.n = F, vars = c("IdentI", "isPos"), group.vars = 1) %>% 
+  filter(isPos==T) 
+
+df %>% 
+  drop_na() %>% 
+  ggplot(aes(x=!!sym(epitope), y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, raster.dpi=300)+
+  geom_text(data=df_tmp, inherit.aes = F, aes(x=60, y=3, label=round(Prop, 2)))+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  xlim(0, 75)+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD366 <- thresh_tmp
+
+```
+
+## CD38
+```{r}
+
+thresh_tmp <- 50
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD38, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 150)+
+  mytheme
+
+thresh$CD38 <- thresh_tmp
+
+```
+
+## CD39
+```{r}
+
+thresh_tmp <- 12.5
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD39, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 50)+
+  mytheme
+
+thresh$CD39 <- thresh_tmp
+
+```
+
+## CD43
+```{r}
+
+thresh_tmp <- 150
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD43, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 500)+
+  mytheme
+
+thresh$CD43 <- thresh_tmp
+
+```
+
+## CD44
+```{r}
+
+thresh_tmp <- 150
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD44, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 500)+
+  mytheme
+
+thresh$CD44 <- thresh_tmp
+
+```
+
+## CD45
+```{r}
+
+thresh_tmp <- 50
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD45, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 500)+
+  mytheme
+
+thresh$CD45 <- thresh_tmp
+
+```
+
+## CD45RA
+```{r}
+
+thresh_tmp <- 15
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD45RA, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 100)+
+  mytheme
+
+thresh$CD45RA <- thresh_tmp
+
+```
+
+## CD45RO
+```{r}
+
+thresh_tmp <- 10
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD45RO, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 50)+
+  mytheme
+
+thresh$CD45RO <- thresh_tmp
+
+```
+
+## CD47
+```{r}
+
+thresh_tmp <- 50
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD47, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0, 150)+
+  mytheme
+
+thresh$CD47 <- thresh_tmp
+
+```
+
+## CD48
+```{r}
+
+thresh_tmp <- 250
+
+df %>% 
+  #drop_na() %>%
+  ggplot(aes(x=CD48, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  mytheme
+
+thresh$CD48 <- thresh_tmp
+
+```
+
+## CD56
+```{r}
+
+thresh_tmp <- 10
+
+df %>% 
+  #drop_na() %>%
+  ggplot(aes(x=CD56, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,50)+
+  mytheme
+
+thresh$CD56 <- thresh_tmp
+
+```
+
+## CD57
+```{r}
+
+thresh_tmp <- 50
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD57, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,150)+
+  mytheme
+
+thresh$CD57 <- thresh_tmp
+
+```
+
+## CD62L
+```{r}
+
+thresh_tmp <- 25
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD62L, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,100)+
+  mytheme
+
+thresh$CD62L <- thresh_tmp
+
+```
+
+## CD69
+```{r}
+
+thresh_tmp <- 140
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD69, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,500)+
+  mytheme
+
+thresh$CD69 <- thresh_tmp
+
+```
+
+## CD70
+```{r}
+
+thresh_tmp <- 15
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD70, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,50)+
+  mytheme
+
+thresh$CD70 <- thresh_tmp
+
+```
+
+## CD73
+```{r}
+
+thresh_tmp <- 50
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD73, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,75)+
+  mytheme
+
+thresh$CD73 <- thresh_tmp
+
+```
+
+## CD79b
+```{r}
+
+thresh_tmp <- 7.5
+
+df %>% 
+  #drop_na() %>%
+  ggplot(aes(x=CD79b, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,75)+
+  mytheme
+
+thresh$CD79b <- thresh_tmp
+
+```
+
+## CD86
+```{r}
+
+thresh_tmp <- 12.5
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD86, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,75)+
+  mytheme
+
+thresh$CD86 <- thresh_tmp
+
+```
+
+## CD95
+```{r}
+
+thresh_tmp <- 25
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD95, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,150)+
+  mytheme
+
+thresh$CD95 <- thresh_tmp
+
+```
+
+## KLRG1
+```{r}
+
+thresh_tmp <- 15
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=KLRG1, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI, nrow = 2)+
+  xlim(0,75)+
+  mytheme
+
+thresh$KLRG1 <- thresh_tmp
+
+```
+
+## Lambda
+```{r}
+
+thresh_tmp <- 7.5
+
+df %>% 
+  ggplot(aes(x=Lambda, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,150)+
+  mytheme
+
+thresh$Lambda <- thresh_tmp
+
+```
+
+## Kappa
+```{r}
+
+thresh_tmp <- 20
+
+df %>% 
+  ggplot(aes(x=Kappa, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,150)+
+  mytheme
+
+thresh$Kappa <- thresh_tmp
+
+```
+
+## TIGIT
+```{r}
+
+thresh_tmp <- 5
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=TIGIT, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,50)+
+  mytheme
+
+thresh$TIGIT <- thresh_tmp
+
+```
+
+## CD95
+```{r}
+
+thresh_tmp <- 30
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=CD95, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,150)+
+  mytheme
+
+thresh$CD95 <- thresh_tmp
+
+```
+
+## Isotype mouse IgG1
+```{r}
+
+thresh_tmp <- 10
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=mouseIgG1, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,50)+
+  mytheme
+
+thresh$mouseIgG1 <- thresh_tmp
+
+```
+
+## Isotype mouse IgG2a
+```{r}
+
+thresh_tmp <- 10
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=mouseIgG2a, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,50)+
+  mytheme
+
+thresh$mouseIgG2a <- thresh_tmp
+
+```
+
+## Isotype mouse IgG2b
+```{r}
+
+thresh_tmp <- 10
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=mouseIgG2b, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,50)+
+  mytheme
+
+thresh$mouseIgG2b <- thresh_tmp
+
+```
+
+## Isotype hamster IgG
+```{r}
+
+thresh_tmp <- 10
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=hamsterIgG, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,50)+
+  mytheme
+
+thresh$hamsterIgG <- thresh_tmp
+
+```
+
+## Isotype rat IgG
+```{r}
+
+thresh_tmp <- 10
+
+df %>% 
+  drop_na() %>%
+  ggplot(aes(x=ratIgG2b, y=log10_prot_size))+
+  geom_point_rast(shape=1, stroke=0.1, size=0.25, alpha=0.25, raster.dpi=300)+
+  geom_vline(xintercept = thresh_tmp, size=0.25, linetype="dashed")+
+  facet_wrap(~IdentI)+
+  xlim(0,50)+
+  mytheme
+
+thresh$ratIgG2b <- thresh_tmp
+
+```
+
+# Save thresholds
+```{r}
+
+thresh <- data.frame(value=unlist(thresh)) %>% 
+  rownames_to_column("Epitope")
+
+#write.csv(thresh, file = "data/threshholds_denProtein.csv")
+
+```
+
+# Session Info
+```{r}
+
+sessionInfo()
+
+```

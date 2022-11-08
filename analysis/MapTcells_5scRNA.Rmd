@@ -1,0 +1,226 @@
+---
+title: "Map 5 prime single cell RNA data"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  
+  rmdformats::readthedown
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Load packages and functions
+```{r Load packages and functions}
+
+library(Seurat)
+library(tidyverse)
+library(readxl)
+
+source("R/ReadPackages.R")
+source("R/Functions.R")
+source("R/ThemesColors.R")
+
+mytheme <- 
+  theme_bw()+
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5),
+        panel.grid = element_blank())
+  
+```
+
+# Read data
+```{r read data}
+
+Combined_T <- readRDS("output/Tcells_Integrated.rds")
+
+```
+
+# Read and Process 5' scRNA data
+```{r Read and Process}
+
+files <- list.files(path = "countMatrices", pattern = "_Tcells_5'RNA.txt", full.names = T)
+names(files) <- strsplit(files, split = "_") %>% sapply("[[", 1) %>% strsplit(split = "/") %>% sapply("[[", 2)
+
+sobjs_T <- lapply(1:length(files), function(x) {
+  
+  # Read count tables
+  rna <- read.delim(files[x], sep = " ")
+  
+  # Create Seurat Object
+  sobj <- CreateSeuratObject(counts = rna)
+
+  # Add Percentage of mitochondrial genes and PatientID
+  sobj[["percent.mt"]] <- PercentageFeatureSet(sobj, pattern = "^MT-")
+  sobj$PatientID <- names(files)[x]
+  
+  # Normalize data
+  sobj <- NormalizeData(sobj, normalization.method = "LogNormalize", scale.factor = 10000)
+  
+  # Run Seurat Processing
+  sobj <- SeuratProc_T(sobj, verbose=FALSE, 
+                       dims.clustering=1:14, 
+                       resolution.clustering = 0.4, 
+                       dims.umap=1:13)
+  
+  return(sobj)
+  
+  })
+
+names(sobjs_T) <- names(files) 
+
+```
+
+# Map individual samples to CITE-seq reference
+```{r mapping}
+
+sobjs_T_mapped <- lapply(sobjs_T, function(sobj) {
+    
+    anchors <- FindTransferAnchors(reference = Combined_T, query = sobj, 
+                                   reference.reduction = "pcaRNA")
+  
+    sobj <- MapQuery(anchorset = anchors, reference = Combined_T, 
+                     query = sobj, reduction.model = "wnn.umap",
+                     refdata = list(celltype = "IdentI"),
+                     reference.reduction = "pcaRNA")
+    
+    return(sobj)
+    
+    })
+
+names(sobjs_T_mapped) <- names(sobjs_T)
+
+
+```
+
+# Plots
+```{r generate plots}
+
+p1 <- 
+  DimPlot(Combined_T, group.by = "IdentI", raster = TRUE, raster.dpi = c(500,500),
+          reduction = "wnn.umap", label = TRUE)+
+  scale_color_manual(values = colors_umap_cl)+
+  xlim(-10, 13)+ylim(-10, 10)+
+  coord_fixed()+
+  mytheme
+
+p2 <- lapply(names(sobjs_T), function(sample){
+  DimPlot(subset(Combined_T, subset=PatientID==sample), raster.dpi = c(500,500), raster = TRUE,
+          reduction = "wnn.umap", group.by = "IdentI", label = TRUE)+
+     scale_color_manual(values = colors_umap_cl)+
+    xlim(-10, 13)+ylim(-10, 10)+
+    coord_fixed()+
+    mytheme
+  }) %>% `names<-`(names(sobjs_T))
+
+p3 <- lapply(sobjs_T_mapped, function(sample){
+  DimPlot(sample, label = TRUE, raster.dpi = c(500,500), raster = TRUE,
+          group.by = "predicted.celltype", reduction = "ref.umap")+
+     scale_color_manual(values = colors_umap_cl)+
+    xlim(-10, 13)+ylim(-10, 10)+
+    coord_fixed()+
+    mytheme
+  }) %>% `names<-`(names(sobjs_T_mapped))
+
+```
+
+## LN0078
+```{r LN0078, fig.height=4, fig.width=10}
+
+p1+p2$LN0078+p3$LN0078
+
+```
+
+## LN0132
+```{r LN0132, fig.height=4, fig.width=10}
+
+p1+p2$LN0132+p3$LN0132
+
+```
+
+## LN0144
+```{r LN0144, fig.height=4, fig.width=10}
+
+p1+p2$LN0144+p3$LN0144
+
+```
+
+## LN0178
+```{r LN0178, fig.height=4, fig.width=10}
+
+p1+p2$LN0178+p3$LN0178
+
+```
+
+## LN0193
+```{r LN0193, fig.height=4, fig.width=10}
+
+p1+p2$LN0193+p3$LN0193
+
+```
+
+## LN0217
+```{r LN0217, fig.height=4, fig.width=10}
+
+p1+p2$LN0217+p3$LN0217
+
+```
+
+## LN0302
+```{r LN0302, fig.height=4, fig.width=10}
+
+p1+p2$LN0302+p3$LN0302
+
+```
+
+## LN0110
+```{r LN0110, fig.height=4, fig.width=10}
+
+p1+p2$LN0110+p3$LN0110
+
+```
+
+## LN0198
+```{r LN0198, fig.height=4, fig.width=10}
+
+p1+p2$LN0198+p3$LN0198
+
+```
+
+## LN0259
+```{r LN0259, fig.height=4, fig.width=10}
+
+p1+p2$LN0259+p3$LN0259
+
+```
+
+## LN0278
+```{r LN0278, fig.height=4, fig.width=10}
+
+p1+p2$LN0278+p3$LN0278
+
+```
+
+# Save object
+```{r save, eval=FALSE}
+
+saveRDS(sobjs_T_mapped, file = "output/List_SeuratObjects_T_5prime.rds")
+
+```
+
+# Session Info
+```{r session info}
+
+sessionInfo()
+
+```
+

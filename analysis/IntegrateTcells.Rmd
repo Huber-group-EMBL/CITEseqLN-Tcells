@@ -1,0 +1,445 @@
+---
+title: "Integrate T cells"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  
+  rmdformats::readthedown: 
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Functions and packages
+```{r read data}
+
+require(future)
+require(future.apply)
+source("R/ReadPackages.R")
+source("R/Functions.R")
+source("R/ThemesColors.R")
+#source("R/Helpers.R")
+
+```
+
+# Read meta data
+```{r read meta}
+
+df_meta <- read.csv("data/metaData.csv", sep = ",") %>% 
+  filter(!is.na(Run))
+
+df_meta %>% select(PatientID, Entity, Run) %>% 
+  DT::datatable(., options = list(pageLength = 5, autoWidth = TRUE))
+
+```
+
+## Read count tables
+```{r read count}
+
+sobjs_T <- lapply(df_meta$PatientID, function(x){
+  
+  # Read count matrices
+  rna <- read.delim(paste0("countMatrices/", x, "_Tcells_3'RNA.txt"), sep = " ")
+  adt <- read.delim(paste0("countMatrices/", x, "_Tcells_ADT.txt"), sep = " ")
+  
+  # Create Seurat Object
+  sobj <- CreateSeuratObject(counts = rna)
+  
+  # Add ADT data
+  sobj[["ADT"]] <- CreateAssayObject(counts = adt)
+  DefaultAssay(sobj) <- "RNA"
+  
+  # Add Percentage of mitochondrial genes and some meta data
+  sobj$percent.mt <- PercentageFeatureSet(sobj, pattern = "^MT-")
+  sobj$Barcode_full <- colnames(sobj)
+  sobj$PatientID <- x
+  
+  meta_tmp <- df_meta %>% filter(PatientID==x)
+  
+  # Add more meta data
+  sobj$Entity <- meta_tmp$Entity
+  sobj$Subtype <- meta_tmp$Subtype
+  sobj$Age <- meta_tmp$Age
+  sobj$Sex <- meta_tmp$Sex
+  sobj$Status <- meta_tmp$Status
+  sobj$Run <- meta_tmp$Run
+  
+  return(sobj)
+  
+}) %>% `names<-`(df_meta$PatientID)
+
+```
+
+## Process CITE-seq data
+```{r process}
+
+sobjs_T <- lapply(sobjs_T, function(sobj){
+  
+  # Please note that low quality cells (e.g. high mito counts), doublets, 
+  # and non T-cells were already filtered and are not contained in the provided count matrices. 
+  # Thus further filtering is not necessary here.
+  # In case you need unfiltered raw data, please contact tobias.roider@embl.de
+  
+  # Normalize data
+  sobj <- NormalizeData(sobj, normalization.method = "LogNormalize", scale.factor = 10000)
+  
+  # Run Seurat Processing
+  sobj <- SeuratProc_T(sobj, verbose=FALSE, 
+                       dims.clustering=1:14, 
+                       resolution.clustering = 0.4, 
+                       dims.umap=1:13)
+  
+  # Run Processing for ADT data
+  DefaultAssay(sobj) <- "ADT"
+  sobj <- NormalizeData(sobj, assay = "ADT", normalization.method = "CLR")
+  
+  # Run Seurat Processing for ADT part
+  sobj <- SeuratProcADT_T(sobj, verbose=FALSE, 
+                          dims.clustering=1:14, 
+                          resolution.clustering = 0.4, 
+                          dims.umap=1:13)
+  
+  DefaultAssay(sobj) <- "RNA"
+  Idents(sobj) <- "RNA_snn_res.0.4"
+  
+  return(sobj)
+  
+})
+
+```
+
+# Integrate data
+## Merge data
+```{r merge}
+
+# Merge objects
+for(i in 1:length(sobjs_T)) {
+  if(i==1){
+    Combined_T <- merge(sobjs_T[[1]], sobjs_T[[2]])
+  }
+  if(i>2){
+    Combined_T <- merge(Combined_T, sobjs_T[[i]])
+  }
+}
+
+```
+
+## Split objects by run
+```{r split}
+
+# Split objects again by run to account for most important batch factor
+splitted_objects <- SplitObject(Combined_T, split.by = "Run")
+
+```
+
+## Integrate RNA
+### Find anchors and integrate data
+```{r anchors rna}
+
+anchors <- FindIntegrationAnchors(object.list = splitted_objects, 
+                                  dims = 1:20, 
+                                  assay = rep("RNA", length(splitted_objects)))
+
+Combined_T <- IntegrateData(anchorset = anchors, 
+                            new.assay.name = "integratedRNA")
+
+DefaultAssay(Combined_T) <- "integratedRNA"
+
+```
+
+### Standard workflow for integrated object
+```{r workflow rna}
+
+Combined_T <- ScaleData(Combined_T) 
+Combined_T <- RunPCA(Combined_T, 
+                     reduction.name = "pcaRNA", reduction.key = "pcaRNA_")
+
+Combined_T <- RunUMAP(Combined_T, dims = 1:20, reduction.key = "umapRNA_",
+                      reduction.name = "umapRNA", reduction = "pcaRNA")
+
+Combined_T <- FindNeighbors(Combined_T, reduction = "pcaRNA", dims = 1:20)
+Combined_T <- FindClusters(Combined_T, resolution = 0.6)
+
+```
+
+### Visualization
+#### Cluster
+```{r vis cluster rna, fig.height=5, fig.width=5.5}
+
+DimPlot(Combined_T, reduction = "umapRNA", label = T, raster = T)+
+  NoLegend()
+
+```
+
+#### PatientID
+```{r vis cluster pat, include=F, eval=F}
+
+DimPlot(Combined_T, reduction = "umapRNA", label = F, raster = T, group.by = "PatientID")+
+  NoLegend()
+
+```
+
+#### Run
+```{r vis run run, include=F, eval=F}
+
+DimPlot(Combined_T, reduction = "umapRNA", label = F, raster = T, group.by = "Run")+
+  NoLegend()
+
+```
+
+## Integrate ADT
+### Find anchors and integrate data
+```{r anchors adt}
+
+anchors <- FindIntegrationAnchors(object.list = splitted_objects, 
+                                  dims = 1:20, 
+                                  assay = rep("ADT", length(splitted_objects)))
+
+Combined_T_ADT <- IntegrateData(anchorset = anchors,
+                                new.assay.name = "integratedADT")
+
+Combined_T[["integratedADT"]] <- Combined_T_ADT[["integratedADT"]]
+
+```
+
+### Standard workflow for integrated object
+```{r workflow adt}
+
+DefaultAssay(Combined_T) <- "integratedADT"
+
+# Run the standard workflow for visualization and clustering
+Combined_T <- ScaleData(Combined_T)
+Combined_T <- RunPCA(Combined_T, npcs = 30, nfeatures.print = 5,
+                         reduction.name = "pcaADT", reduction.key = "pcaADT_")
+
+Combined_T <- RunUMAP(Combined_T, reduction = "pcaADT", dims = 1:20, 
+                          reduction.name = "umapADT", 
+                          reduction.key = "umapADT_")
+
+Combined_T <- FindNeighbors(Combined_T, reduction = "pcaADT", dims = 1:20)
+Combined_T <- FindClusters(Combined_T, resolution = 0.4)
+
+```
+
+### Visualization
+#### Cluster
+```{r vis cluster adt, fig.height=5, fig.width=5.5}
+
+DimPlot(Combined_T, reduction = "umapADT", label = TRUE, raster = T)+NoLegend()
+
+```
+
+#### PatientID
+```{r vis pat adt, include=F, eval=F}
+
+DimPlot(Combined_T, reduction = "umapADT", label = FALSE, raster = T,
+        group.by = "PatientID")+NoLegend()
+
+```
+
+#### Run
+```{r vis run adt, include=F, eval=F}
+
+DimPlot(Combined_T, reduction = "umapADT", label = FALSE, raster = T,
+        group.by = "Run")+NoLegend()
+
+```
+
+# Identify and refine clusters
+## Repeat clutering with higher resolution
+```{r clustering high res, fig.height=5, fig.width=5.5}
+
+DefaultAssay(Combined_T) <- "integratedRNA"
+Combined_T <- FindClusters(Combined_T, resolution = 1.4)
+DimPlot(Combined_T, reduction = "umapRNA", label = T, raster = T,
+        group.by = "integratedRNA_snn_res.1.4")+NoLegend()
+
+Idents(Combined_T) <- "integratedRNA_snn_res.1.4"
+
+```
+
+# Identify clusters
+## Find Markers
+```{r identify markers}
+
+Idents(Combined_T) <- "integratedRNA_snn_res.1.4"
+
+clusters <- paste0("cluster_", 0:(length(unique(Idents(Combined_T)))-1))
+
+# Marker
+markers_rna <- lapply(clusters, function(x){
+  z <- as.numeric(gsub(x, pattern = "cluster_", replacement = ""))
+  
+  df_mark <- FindMarkers(Combined_T, ident.1 = z, assay = "integratedRNA", test.use = "roc") %>% 
+    mutate(avg_diff=round(avg_diff, 3),
+           avg_log2FC=round(avg_log2FC, 3)) %>% 
+    select(-avg_diff, -pct.1, -pct.2) %>%
+    rownames_to_column("Gene")
+  
+  return(df_mark)
+  }) %>% `names<-`(clusters) %>% 
+  bind_rows(., .id = "Cluster") %>% 
+  mutate(Cluster=substr(Cluster,9,10))
+
+# Marker
+markers_adt <- lapply(clusters, function(x){
+  z <- as.numeric(gsub(x, pattern = "cluster_", replacement = ""))
+  
+  df_mark <- FindMarkers(Combined_T, ident.1 = z, assay = "integratedADT", test.use = "roc") %>% 
+    mutate(avg_diff=round(avg_diff, 3),
+           avg_log2FC=round(avg_log2FC, 3)) %>% 
+    select(-avg_diff, -pct.1, -pct.2) %>% 
+    rownames_to_column("Protein")
+  
+  return(df_mark)
+  }) %>% `names<-`(clusters) %>% 
+  bind_rows(., .id = "Cluster") %>% 
+  mutate(Cluster=substr(Cluster,9,10))
+
+```
+
+### Show Markers
+#### RNA
+```{r show markers rna}
+DT::datatable(markers_rna, rownames = FALSE, filter = "top", 
+              options = list(pageLength = 10, autoWidth = TRUE))
+
+
+```
+
+#### ADT
+```{r show markers adt}
+
+DT::datatable(markers_adt, rownames = FALSE, filter = "top", 
+              options = list(pageLength = 10, autoWidth = TRUE))
+
+```
+
+# Refine object
+## Identify unwanted clusters
+```{r refine clusters}
+# Remove cluster of with levels of LYZ (--> myeloid cells)
+c1 <- markers_rna %>% filter(Gene=="LYZ", myAUC>0.8) %>% pull(Cluster)
+
+# Remove cluster with high levels of mito genes
+c2 <- markers_rna %>% group_by(Cluster) %>%  
+  top_n(5, myAUC) %>% 
+  filter(Gene=="MT-CO3") %>% 
+  pull(Cluster)
+  
+# Remove cluster with high levels of interferon induced genes
+c3 <- markers_rna %>% group_by(Cluster) %>%  
+  top_n(5, myAUC) %>% 
+  filter(Gene=="IFI44L") %>% 
+  pull(Cluster)
+
+# Remove cluster with high levels of interferon induced genes
+c4 <- markers_rna %>% group_by(Cluster) %>%  
+  top_n(1, myAUC) %>% 
+  filter(Gene=="ISG15") %>% 
+  pull(Cluster)
+
+# Remove cluster with high levels of heat shock proteins
+c5 <- markers_rna %>% group_by(Cluster) %>%  
+  top_n(5, myAUC) %>% 
+  filter(Gene=="HSP90AB1") %>% 
+  pull(Cluster)
+
+clusters_keep <- setdiff(levels(Combined_T$integratedRNA_snn_res.1.4), c(c1,c2,c3,c4,c5))
+clusters_keep
+
+```
+
+## Subset object
+```{r subset object, fig.height=5, fig.width=5.5}
+
+Combined_T <- subset(Combined_T, idents = clusters_keep)
+DimPlot(Combined_T, label = T)+
+  NoLegend()
+
+Combined_T <- RunUMAP(Combined_T, dims = 1:30, reduction = "pcaRNA",  
+                               reduction.name = "umapRNA", reduction.key = "umapRNA_")
+Combined_T <- FindNeighbors(Combined_T, reduction = "pcaRNA", dims = 1:20)
+Combined_T <- FindClusters(Combined_T, resolution = 1.4)
+
+DimPlot(Combined_T, label = T, group.by = "integratedRNA_snn_res.1.4", raster = T)+
+  NoLegend()
+
+Idents(Combined_T) <- "IdentI"
+
+```
+
+# Run WNN pipeline
+```{r run wnn, fig.height=5, fig.width=5.5}
+
+Combined_T <- FindMultiModalNeighbors(
+  Combined_T, reduction.list = list("pcaRNA", "pcaADT"), k.nn = 30,
+  dims.list = list(1:12, 1:20), modality.weight.name = c("RNA.weight", "ADT.weight")
+)
+
+Combined_T <- RunUMAP(Combined_T, nn.name = "weighted.nn", reduction.name = "wnn.umap", 
+                      reduction.key = "wnnUMAP_", return.model = TRUE)
+
+Combined_T <- FindClusters(Combined_T, graph.name = "wsnn", algorithm = 3, resolution = 0.7)
+
+DimPlot(Combined_T, reduction = 'wnn.umap', group.by = "wsnn_res.0.7", label = T, raster = T)+
+  NoLegend()
+
+```
+
+# Remove singletons
+```{r remove singletons}
+
+Combined_T <- subset(Combined_T, idents = c(0:14))
+
+```
+
+# Re-run WNN pipeline
+```{r rerun wnn}
+
+Combined_T <- FindMultiModalNeighbors(
+  Combined_T, reduction.list = list("pcaRNA", "pcaADT"), k.nn = 30, 
+  dims.list = list(1:15, 1:20), modality.weight.name = c("RNA.weight", "ADT.weight")
+)
+
+Combined_T <- RunUMAP(Combined_T, nn.name = "weighted.nn", reduction.name = "wnn.umap", 
+                      reduction.key = "wnnUMAP_", return.model = TRUE)
+Combined_T <- FindClusters(Combined_T, graph.name = "wsnn", algorithm = 3, resolution = 0.7)
+
+```
+
+# Compare with original object
+```{r compare with original, fig.height=5, fig.width=5.5}
+
+Combined_T_or <- readRDS("output/Tcells_Integrated.rds")
+DimPlot(AddMetaData(Combined_T, metadata = Idents(Combined_T_or), 
+                    col.name = "IdentI_original"), 
+        reduction = 'wnn.umap', group.by = "IdentI_original", label = T, raster = T)+
+  NoLegend()
+
+```
+
+# Save object
+```{r save, eval=F}
+
+saveRDS(Combined_T, file = "output/Tcells_Integrated.rds")
+
+# Output might slightly differ depending on the version and system you use. For exact reproduction of figures please use Seurat Object provided at HeiData. 
+
+```
+
+# Session Info
+```{r}
+
+sessionInfo()
+
+```

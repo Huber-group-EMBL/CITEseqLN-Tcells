@@ -1,0 +1,436 @@
+---
+title: "Figure 2"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  rmdformats::readthedown: 
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Read data, functions and packages
+```{r read data}
+
+source("R/ReadPackages.R")
+source("R/Functions.R")
+source("R/ReadData.R")
+source("R/ThemesColors.R")
+source("R/Helpers.R")
+
+```
+
+# Most important markers
+```{r most important markers, fig.height=2}
+
+varImp(GBresults_surfaceplus, scale = TRUE)[[1]]
+
+plot_markers <- varImp(GBresults_surfaceplus, scale = TRUE)[[1]] %>% 
+  data.frame %>% 
+  rownames_to_column("Parameter") %>% 
+  top_n(n = 35, Overall) %>% 
+  mutate(Parameter=gsub(Parameter, pattern = ".", fixed = T, replacement = "")) %>% 
+  mutate(Parameter=gsub(Parameter, pattern = "tfactivity_|-E|integratedadt_|integratedrna_", replacement = "")) %>% 
+  mutate(Parameter=ifelse(Parameter=="FOXP3", "FoxP3", Parameter)) %>% 
+  mutate(Code=ifelse(Parameter %in% c("CD279", "CD4", "MKI67", "CD244", "FoxP3", "CD25", 
+                                      "CD31", "CD45RA", "CD69", "CD185", "CD366", "IKZF3", 
+                                      "CD45RO", "CD278", "CD8a"), 1, 0)) %>% 
+  ggplot(aes(x=0, y=reorder(Parameter, -Overall)))+
+  geom_segment(aes(xend=Overall, yend=reorder(Parameter, Overall)), size=0.35)+
+  geom_point(aes(x=Overall, color=as.character(Code), y=reorder(Parameter, Overall)), inherit.aes = F, size=1)+
+  scale_color_manual(values = c("grey65", "#c51b8a")) +
+  scale_x_continuous(expand = c(0,0.25), limits = c(0,110), name = "Scaled importance")+
+  ggtitle("Top 35 features")+
+  coord_flip()+
+  mytheme_1+
+  theme(axis.title.x = element_blank(),
+        plot.title =element_text(hjust=0.5, face = "plain"),
+        panel.border = element_rect(size=0.25),
+        axis.ticks.y = element_line(size=0.25),
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_text(size=6),
+        axis.title.y = element_text(size=6),
+        axis.text.x = element_text(size=6, angle=45, hjust=1))+
+  labs(tag = "A")
+
+plot_markers
+#ggsave(width = 14, height = 4.25, units = "cm", filename = "Figure2_p1.pdf")
+
+```
+
+# Correlation: Flow cytometry ~ CITE-seq
+```{r correlation}
+
+df_cor <- left_join(df_freq %>% filter(!Population %in% c(df_comb$IdentI)), 
+                    df_facs, by=c("PatientID", "Population")) %>% 
+  filter(!is.na(FACS)) %>% 
+  filter(!PatientID %in% c("LN0262", "LN0302")) 
+
+cor_plots_facs <- list()
+
+cor_plots_facs[["TFH"]] <- df_cor %>% 
+  filter(Population=="TFH") %>% 
+  ggplot(aes(x=FACS, y=RNA))+
+  geom_point(color=colors_umap_cl[["6"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["6"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,75), breaks = c(0, 25, 50, 75))+
+  scale_y_continuous(limits = c(0,75), breaks = c(0, 25, 50, 75))+
+  labs(
+    x="CD4<sup>+</sup> FOXP3<sup>-</sup><br><span>CXCR5<sup>+</sup> PD1<sup>+</sup></span>",
+    y="T<sub>FH</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TPR"]] <- df_cor %>% 
+  filter(Population=="TPR") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["14"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["14"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.4), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,12), breaks = c(0, 4, 8, 12))+
+  scale_y_continuous(limits = c(0,12), breaks = c(0, 4, 8, 12))+
+ labs(
+    x="Ki67<sup>+</sup>",
+    y="T<sub>Pr</sub>",
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TDN"]] <- df_cor %>% 
+  filter(Population=="TDN") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["19"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["19"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,8), breaks = c(0, 2, 4, 6, 8))+
+  scale_y_continuous(limits = c(0,8), breaks = c(0, 2, 4, 6, 8))+
+  labs(
+    x="CD45RA<sup>+</sup><br><span>CD4<sup>-</sup> CD8<sup>-</sub></span>",
+    y="T<sub>DN</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["THCM1"]] <- df_cor %>% 
+  filter(Population=="THCM1") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["2"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["2"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,17), breaks = c(0, 5, 10, 15))+
+  scale_y_continuous(limits = c(0,17), breaks = c(0, 5, 10, 15))+
+  labs(
+    x="CD45RA<sup>-</sup> FOXP3<sup>-</sup><br><span>CD69<sup>-</sup> PD1<sup>Low</sup></span>",
+    y="T<sub>H</sub> CM<sub>1</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["THCM2"]] <- df_cor %>% 
+  filter(Population=="THCM2") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["9"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["9"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,15), breaks = c(0, 5, 10, 15))+
+  scale_y_continuous(limits = c(0,15), breaks = c(0, 5, 10, 15))+
+  labs(
+    x="CD45RA<sup>-</sup> FOXP3<sup>-</sup><br><span>CD69<sup>+</sup> PD1<sup>Low</sup></span>",
+    y="T<sub>H</sub> CM<sub>2</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["THNaive"]] <- df_cor %>% 
+  filter(Population=="THNaive") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["1"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["1"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,25), breaks = c(0, 8, 16, 24))+
+  scale_y_continuous(limits = c(0,25), breaks = c(0, 8, 16, 24))+
+  labs(
+    x="CD4<sup>+</sup> CD45RA<sup>+</sup>",
+    y="CD4<sup>+</sup> Naive"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TREG"]] <- df_cor %>% 
+  filter(Population=="TREG") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color="#578bb9", size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color="#578bb9", se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45))+
+  scale_y_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45))+
+  labs(
+    x="CD4<sup>+</sup> FOXP3<sup>+</sup>",
+    y="T<sub>REG</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TREG/CM1"]] <- df_cor %>% 
+  filter(Population=="TREG/CM1") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["8"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["8"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,55), breaks = c(0, 15, 30, 45))+
+  scale_y_continuous(limits = c(0,55), breaks = c(0, 15, 30, 45))+
+    labs(
+    x="CD4<sup>+</sup><span> FOXP3<sup>+</sup> /<br>CD69<sup>-</sub></span>",
+    y="T<sub>REG</sub> CM<sub>1</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TREG/EM2"]] <- df_cor %>% 
+  filter(Population=="TREG/EM2") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["11"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["11"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,92), breaks = c(0, 30, 60, 90))+
+  scale_y_continuous(limits = c(0,92), breaks = c(0, 30, 60, 90))+
+  labs(
+    x="CD4<sup>+</sup> FOXP3<sup>+</sup> /<br><span>CD69<sup>+</sup> IKZF3<sup>+</sub></span>",
+    y="T<sub>REG</sub> EM<sub>2</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TREG/EM1"]] <- df_cor %>% 
+  filter(Population=="TREG/EM1") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["15"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["15"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,50), breaks = c(0, 15, 30, 45))+
+  scale_y_continuous(limits = c(0,50), breaks = c(0, 15, 30, 45))+
+  labs(
+    x="CD4<sup>+</sup> FOXP3<sup>+</sup> /<br><span>CD69<sup>+</sup> IKZF3<sup>-</sup> ICOS<sup>-</sup></span>",
+    y="T<sub>REG</sub> EM<sub>1</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TREG/CM2"]] <- df_cor %>% 
+  filter(Population=="TREG/CM2") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["13"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["13"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,47), breaks = c(0, 15, 30, 45))+
+  scale_y_continuous(limits = c(0,47), breaks = c(0, 15, 30, 45))+
+   labs(
+    x="CD4<sup>+</sup> FOXP3<sup>+</sup> /<br><span>CD69<sup>+</sup> IKZF3<sup>-</sup> ICOS<sup>+</sup></span>",
+    y="T<sub>REG</sub> CM<sub>2</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TTOXNaive"]] <- df_cor %>% 
+  filter(Population=="TTOXNaive") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["12"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["12"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,27), breaks = c(0, 8, 16, 24))+
+  scale_y_continuous(limits = c(0,27), breaks = c(0, 8, 16, 24))+
+ labs(
+    x="CD8<sup>+</sup> CD45RA<sup>+</sup>",
+    y="CD8<sup>+</sup> Naive"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+ 
+cor_plots_facs[["TTOX"]] <- df_cor %>% 
+  filter(Population=="TTOX") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color="#b50923", size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color="#b50923", se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
+  scale_y_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
+   labs(
+    x="CD31<sup>+</sup> U CD244<sup>+</sup>",
+    y="T<sub>TOX</sub> non-Naive"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TTOX/EM1"]] <- df_cor %>% 
+  filter(Population=="TTOX/EM1") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["3"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["3"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,85), breaks = c(0, 25, 50, 75))+
+  scale_y_continuous(limits = c(0,85), breaks = c(0, 25, 50, 75))+
+ labs(
+    x="CD31<sup>+</sup> U CD244<sup>+</sup> /<br><span>TIM3<sup>-</sup> PD1<sup>Low</sup></span>",
+    y="T<sub>TOX</sub> EM<sub>1</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TTOX/EM2"]] <- df_cor %>% 
+  filter(Population=="TTOX/EM2") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["16"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
+              color=colors_umap_cl[["16"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,57), breaks = c(0, 15, 30, 45))+
+  scale_y_continuous(limits = c(0,57), breaks = c(0, 15, 30, 45))+
+    labs(
+    x="CD31<sup>+</sup> U CD244<sup>+</sup> /<br><span>TIM3<sup>-</sup> PD1<sup>High</sup></span>",
+    y="T<sub>TOX</sub> EM<sub>2</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+cor_plots_facs[["TTOX/EM3"]] <- df_cor %>% 
+  filter(Population=="TTOX/EM3") %>% 
+  ggplot(aes(x=FACS, y=RNA, label=substr(PatientID, 4, 6)))+
+  geom_point(color=colors_umap_cl[["5"]], size=0.45, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x,  na.rm = TRUE,
+              color=colors_umap_cl[["5"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
+  scale_y_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
+  labs(
+    x="CD31<sup>+</sup> U CD244<sup>+</sup> /<br><span>TIM3<sup>+</sup> PD1<sup>+</sup></span>",
+    y="T<sub>TOX</sub> EM<sub>3</sub>"
+  )+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub
+
+```
+
+## Median Pearson's R
+```{r median coefficient}
+
+df_cor %>% 
+  group_by(Population) %>% 
+  filter(!Population %in% c("TREG", "TTOX")) %>% 
+  summarise(R=cor.test(RNA, FACS, method="pearson")$estimate) %>% pull(R) %>% median()
+
+```
+
+## Assemble plot
+```{r assemble plot, fig.height=3}
+
+plot_cor_full <- cor_plots_facs$TPR+labs(tag="B")+theme(plot.tag = element_text(margin = unit(c(0,0.15,0,0), units = "cm")))+
+  cor_plots_facs$THNaive+
+  cor_plots_facs$THCM1+
+  cor_plots_facs$THCM2+
+  cor_plots_facs$TFH+
+  cor_plots_facs$`TREG/CM1`+
+  cor_plots_facs$`TREG/CM2`+
+  cor_plots_facs$`TREG/EM1`+
+  cor_plots_facs$`TREG/EM2`+
+  cor_plots_facs$TTOXNaive+
+  cor_plots_facs$`TTOX/EM1`+
+  cor_plots_facs$`TTOX/EM2`+
+  cor_plots_facs$`TTOX/EM3`+
+  cor_plots_facs$TDN+
+  plot_layout(nrow = 2)
+
+plot_cor_full
+
+#ggsave(width = 19, height = 7, units = "cm", filename = "Figure2_p2.pdf")
+
+```
+
+# Mini scatter plot
+```{r mini scatter, warning=FALSE, fig.height=2, fig.width=2}
+
+set.seed(1)
+FetchData(Combined_T, vars = c("integratedadt_.CD366", "integratedadt_.CD279", "IdentI")) %>% 
+  sample_n(3000) %>% 
+  mutate(IdentI=as.character(IdentI)) %>% 
+  ggplot(aes(x=integratedadt_.CD366, y=integratedadt_.CD279, fill=IdentI, color=IdentI))+
+  ggrastr::geom_point_rast(size=0.25, stroke=0, shape=21, alpha=0.75, na.rm=T)+
+  scale_fill_manual(values = colors_umap_cl, limits=factor(cluster_order), labels=unlist(labels_cl))+
+  geom_rect(aes(xmin=0.95, xmax=2, ymin=0.25, ymax=3), size=0.15, fill=NA, color="black", linetype="solid")+
+  scale_y_continuous(limits = c(-0, 5), name = "Marker 1")+
+  scale_x_continuous(limits = c(-0, 2), name = "Marker 2")+
+  mytheme_1+
+  theme(axis.text = element_text(color="white"),
+        panel.border = element_rect(size=0.5),
+        axis.title.x = element_text(vjust = 7, size=7),
+        axis.title.y = element_text(vjust = -5, size=7),
+        axis.ticks.x =  element_blank(),
+        axis.ticks.y =  element_blank())
+
+#ggsave(filename = "Figure2_p3.pdf", width = 3, height = 3, units = "cm")
+
+```
+
+# Session info
+```{r session info}
+
+sessionInfo()
+
+```

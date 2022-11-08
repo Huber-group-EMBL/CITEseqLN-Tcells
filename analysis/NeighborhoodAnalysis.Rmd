@@ -1,0 +1,136 @@
+---
+title: "Neighborhood analysis"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  
+  rmdformats::readthedown:
+    
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Load packages, functions and data
+```{r Load packages and functions}
+
+library(Seurat)
+library(tidyverse)
+library(readxl)
+
+source("R/ReadPackages.R")
+source("R/Functions.R")
+
+# Read CODEX data (only meta data) 
+# Available at BioStudies database (https://www.ebi.ac.uk/biostudies/) under accession number S-BIAD565
+codex_annotation <- data.table::fread("data/cells_annotation.csv") %>% tibble() %>% 
+  filter(Merged_final!="na")
+  
+```
+
+# Function
+```{r function}
+
+# Run nearest neighbor analysis
+run_NNanalysis <- function(data=NULL, plan_session="sequential", n_workers=1, nn=25, regions=NULL, 
+                           add.prop=TRUE){
+  
+  require(future)
+  require(future.apply)
+  require(FNN)
+  
+  if(plan_session=="sequential"){
+    plan(strategy = plan_session)
+  }
+  
+  if(plan_session=="multisession"){
+    plan(strategy = plan_session, workers=n_workers)
+  }
+  
+  options(future.globals.maxSize= 8000*1024^2)
+  
+  output <- future_lapply(regions, function(r){
+    
+    df <- data %>% 
+      filter(unique_region==r) 
+    
+    df_nn <- get.knn(select(df,x,y), nn)
+    
+    df_nn <- df_nn$nn.index %>% 
+      `rownames<-`(df$unique_cell_id) %>% 
+      data.frame() %>% 
+      rownames_to_column("unique_cell_id") %>% 
+      pivot_longer(cols = 2:ncol(.)) %>% 
+      left_join(., df %>% select(unique_cell_id_nn=unique_cell_id, Merged_final) %>% mutate(value=1:nrow(.)), by="value") %>% 
+      select(-value) 
+    
+    if(add.prop==TRUE){
+      mat <- df_nn %>% 
+        add_prop(vars = c("unique_cell_id", "Merged_final"), group.vars = 1) %>% 
+        pivot_wider(names_from = "Merged_final", values_from = "Prop", values_fill = 0) %>% 
+        column_to_rownames("unique_cell_id")
+      mat <- mat[names(which(rowSums(mat)>0)), ]
+
+    } else {
+      mat <- df_nn 
+      }
+
+    return(mat)
+  })
+  plan(strategy = "sequential")
+  
+  mat <- do.call(rbind, output)
+  
+  return(mat)
+}
+
+```
+
+# Run Analysis
+```{r run analysis}
+
+# Read and process codex data (uses future package)
+nn <- run_NNanalysis(data = codex_annotation, regions = unique(codex_annotation$unique_region), 
+                     plan_session = "multisession", 
+                     add.prop=TRUE,
+                     n_workers = 10, 
+                     nn = 25)
+
+# Use k-means clustering to determine neighborhood classes
+set.seed(1)
+hclust <- kmeans(nn, centers = 10, iter.max = 50, nstart = 1)
+nn_classes <- data.frame(Region=hclust$cluster)  %>% 
+  mutate(Region=as.character(Region)) %>% 
+  rownames_to_column("unique_cell_id")
+
+# Use PCA on nearst neighbour matrix
+pca_codex <- prcomp(nn, scale. = T, center = T)
+
+# Remove objects
+rm(list = setdiff(ls(), c("nn", "nn_classes", "pca_codex", "run_NNanalysis")))
+
+```
+
+# Save
+```{r save}
+
+save.image("output/Neighborhood_results.RData")
+
+```
+
+# Session Info
+```{r session info}
+
+sessionInfo()
+
+```
+

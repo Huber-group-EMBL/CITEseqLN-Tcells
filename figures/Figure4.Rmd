@@ -1,0 +1,177 @@
+---
+title: "Figure 4"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  rmdformats::readthedown: 
+  self_contained: false
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Read data, functions and packages
+```{r read data}
+
+source("R/ReadPackages.R")
+source("R/Functions.R")
+source("R/ReadData.R")
+source("R/ThemesColors.R")
+source("R/Helpers.R")
+
+```
+
+# Clonotypes projected onto UMAP
+```{r clonotype sizes, fig.height=2.5}
+
+set.seed(1)
+df_clonotypes <- 
+  DFtotal_5prime %>% 
+  filter(!is.na(raw_clonotype_id)) %>% 
+  select(Barcode_full, PatientID, refUMAP_1, refUMAP_2, Entity, IdentI, raw_clonotype_id) %>% 
+  distinct() %>% 
+  add_count(IdentI, PatientID, raw_clonotype_id) %>% ungroup() %>% 
+  select(-Barcode_full) %>% 
+  group_by(PatientID, raw_clonotype_id, IdentI) %>% 
+  summarise(refUMAP_1=median(refUMAP_1), refUMAP_2=median(refUMAP_2), n, Entity, .groups = "drop") %>% 
+  distinct() %>% 
+  mutate(n=ifelse(n>50, 50, n)) %>% 
+  mutate(Entity=factor(Entity, levels=c("rLN", "DLBCL", "MCL", "FL", "MZL")))
+  
+DF_5prime_umap <- DFtotal_5prime %>% 
+  select(refUMAP_1, refUMAP_2, IdentI, Entity, PatientID) %>% 
+  distinct() %>% 
+  mutate(Entity=factor(Entity, levels=c("rLN", "DLBCL", "MCL", "FL", "MZL")))
+
+p1 <- ggplot()+
+  geom_point_rast(data=DF_5prime_umap %>% select(-Entity), aes(x=refUMAP_1, y=refUMAP_2), 
+                  size=0.2, alpha=0.2, stroke=0, shape=21,  fill="grey90")+
+  geom_point_rast(data=DF_5prime_umap, aes(x=refUMAP_1, y=refUMAP_2, fill=IdentI), size=0.2, 
+                  alpha=ifelse(DF_5prime_umap$Entity=="FL" & DF_5prime_umap$IdentI=="6", 0.05, 0.2), 
+                  stroke=0, shape=21)+
+  geom_point(data=df_clonotypes %>% filter(n>2), aes(x=refUMAP_1, y=refUMAP_2, size=n, color=IdentI), shape=21, stroke=0.25,
+             alpha=ifelse(filter(df_clonotypes, n>2)$Entity %in% c("FL", "MZL"), 1, 0.75))+
+  scale_color_manual(values = colors_umap_cl, guide="none")+
+  scale_fill_manual(values = colors_umap_cl, guide="none")+
+  scale_size_continuous(range=c(1, 5), limits=c(3, 50), breaks=c(3, 20, 35, 50),
+                        labels=c("3", "20", "35", "> 50"), name = NULL)+
+  facet_wrap(~Entity, nrow = 1)+
+  geom_text(data = df_clonotypes %>% select(PatientID, Entity) %>% distinct() %>% add_count(Entity), aes(label = paste0("n = ", n)),
+            x = 9.65, y = -6.9, hjust=1, check_overlap = T, size=2.25)+
+  xlab("refUMAP-1")+
+  ylab("refUMAP-2")+
+  mytheme_1+
+  theme(legend.position = "top",
+        legend.text = element_text(size=7),
+        legend.background = element_rect(fill=NA),
+        legend.box = unit("cm", x = 0.01),
+        legend.spacing.x = unit("cm", x = 0.05),
+        legend.spacing.y = unit("cm", x = 0.001),
+        panel.border = element_rect(size=0.25, color="black"),
+        legend.box.spacing = unit(0, units = "cm"),
+        strip.background = element_rect(size=0.25),
+        legend.box.margin = unit(c(0,-12.5,-0.1,0), units = "cm"))+
+  labs(tag = "A")
+
+p1
+
+```
+
+# Shared clonotypes
+```{r shared clonotypes, fig.height=2.3}
+
+df_clonotypes_shared <- 
+  left_join(DFtotal_5prime %>% filter(!is.na(raw_clonotype_id)) %>% 
+            select(Barcode_fulla=Barcode_full, PatientID, refUMAP_1a=refUMAP_1, refUMAP_2a=refUMAP_2, IdentIa=IdentI, raw_clonotype_id) %>% distinct(),
+          DFtotal_5prime %>% filter(!is.na(raw_clonotype_id)) %>% 
+            select(Barcode_fullb=Barcode_full, PatientID, refUMAP_1b=refUMAP_1, refUMAP_2b=refUMAP_2, IdentIb=IdentI, raw_clonotype_id) %>% distinct()
+          ) %>% 
+  filter(Barcode_fulla!=Barcode_fullb) %>% 
+  filter(IdentIa!=IdentIb)
+
+df_clonotypes_shared_subset <- 
+  df_clonotypes_shared %>% 
+  add_entity() %>% 
+  mutate(Entity=factor(Entity, levels=c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
+  filter(PatientID %in% c("LN0132", "LN0302", "LN0193", "LN0198", "LN0078")) %>% 
+  filter(IdentIa==14)  %>% 
+  mutate(Ident_shared=ifelse(IdentIa==14, IdentIb, IdentIa))
+
+p2 <- ggplot()+
+  geom_point_rast(data=DF_5prime_umap %>% select(-Entity), aes(x=refUMAP_1, y=refUMAP_2), 
+                  size=0.2, alpha=0.2, stroke=0, shape=21, fill="grey90")+
+  geom_point_rast(data=DF_5prime_umap %>% 
+                    filter(PatientID %in% c("LN0132", "LN0302", "LN0193", "LN0198", "LN0078")) %>% 
+                    mutate(PatientID_new=paste0(PatientID, " (", Entity, ")")),
+                  aes(x=refUMAP_1, y=refUMAP_2, fill=IdentI), size=0.25, alpha=0.5, stroke=0, shape=21)+
+  geom_curve(data= df_clonotypes_shared_subset,
+             aes(x=refUMAP_1a, y=refUMAP_2a, xend=refUMAP_1b, yend=refUMAP_2b, color=Ident_shared,
+                 group=paste(raw_clonotype_id, PatientID)), size=0.15, alpha=0.2, curvature = 0.3)+
+  scale_fill_manual(values = colors_umap_cl, guide="none")+
+  scale_color_manual(values = colors_umap_cl, guide="none")+
+  facet_wrap(~Entity, nrow = 1)+
+  geom_text(data = df_clonotypes_shared_subset, aes(label = PatientID), 
+            x = 9.65, y = -6.9, hjust=1, check_overlap = T, size=2.25)+
+  xlab("refUMAP-1")+
+  ylab("refUMAP-2")+
+  ggtitle(expression('Pairs of identical clonotypes between T'[Pr]~'and other T-cell subsets'))+
+  mytheme_1+
+  theme(legend.position = "none",
+        strip.background = element_rect(size=0.25),
+        panel.border = element_rect(size=0.25, color="black"))+
+  labs(tag = "B")
+
+p2
+
+p_full <- p1/p2
+
+#ggsave(p_full, width = 19, height = 11.75, units = "cm", filename = "PDFs/Figure4.pdf")
+
+```
+
+# Additional legend
+```{r legend, fig.height=1.5}
+
+p_legend <- 
+  df_comb %>% 
+  sample_n(100) %>% 
+  ggplot(aes(x=wnnUMAP_1, y=wnnUMAP_2, color=as.factor(IdentI), fill=as.factor(IdentI)))+
+  geom_point(size=2.25, stroke=0, shape=21, alpha=1)+
+  scale_color_manual(values = colors_umap_cl, limits=factor(cluster_order), labels=unlist(labels_cl))+
+  scale_fill_manual(values = colors_umap_cl, limits=factor(cluster_order), labels=unlist(labels_cl))+
+  guides(fill=guide_legend(nrow = 2, byrow = T))+
+  guides(color=guide_legend(nrow = 2, byrow = T))+
+  coord_fixed(clip = "off")+
+  mytheme_1+
+  theme_void()+
+  theme(legend.position = "top",
+        legend.text = element_text(size=7.2, margin = unit(units = "cm", x = c(0,0,0,-0.3))),
+        legend.spacing.x = unit("cm", x = 0.45),
+        legend.spacing.y = unit("cm", x = 0.001),
+        legend.key.width = unit("cm", x = 0.06),
+        legend.key.height = unit("cm", x = 0.5),
+        legend.box.spacing = unit(0, units = "cm"),
+        legend.title = element_blank())
+
+as_ggplot(get_legend(p_legend))
+
+#ggsave(as_ggplot(get_legend(p_legend)), width = 13.5, height = 1, units = "cm", filename = "Figure4_legend.pdf")
+
+```
+
+# Session info
+```{r session info}
+
+sessionInfo()
+
+```

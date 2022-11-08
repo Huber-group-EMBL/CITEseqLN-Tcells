@@ -1,0 +1,2014 @@
+---
+title: "Supplementary Figures"
+author: Tobias Roider
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y, %X')`"
+output: 
+  rmdformats::readthedown:
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r options, include=FALSE, warning = FALSE}
+
+library(knitr)
+opts_chunk$set(echo=TRUE, tidy=FALSE, include=TRUE, message=FALSE, cache.lazy = FALSE,
+               dpi = 100, cache = FALSE, warning = FALSE)
+opts_knit$set(root.dir = "../")
+options(bitmapType = "cairo")
+
+```
+
+# Read data, functions and packages
+```{r read data}
+
+source("R/ReadPackages.R")
+source("R/Functions.R")
+source("R/ReadData.R")
+source("R/ThemesColors.R")
+source("R/Helpers.R")
+
+```
+
+# Supplementary Figure 1
+## Patient characteristics
+```{r patient characteristics SF1 part 1}
+
+p1 <- 
+  df_meta %>% 
+  ggplot(aes(x=Order, y=Tcells, fill=Entity))+
+  geom_bar(stat = "identity", color="white", width=0.5, size=0.25)+
+  geom_text(aes(x=6, y=84, label=paste0("n = ", nrow(df_meta))), check_overlap = T, size=2.75)+
+  scale_y_continuous(name="% T-cells", limits=c(0, 90), expand = c(0.025, 0.025))+
+  scale_x_discrete(limits=as.character(1:101))+
+  scale_fill_manual(values = colors_characteristics)+
+  mytheme_1+
+  coord_cartesian(clip = "off")+
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        plot.tag = element_text(margin = unit(c(0,0,0,-0.75), "cm")),
+        plot.margin = unit(c(0.1,0.1,0,1), "lines"))
+
+cex_ <- 0.5
+pos_ <- -0.25
+size_ <- 2
+
+p_ann <- 
+  ggplot()+
+  geom_tile(data=df_meta, aes(y=0, x=Order, fill=Entity))+
+  geom_tile(data=df_meta, aes(y=-1.75, x=Order, fill=Status))+
+  geom_tile(data=df_meta, aes(y=-3.5, x=Order, fill=Sex))+
+  geom_text(data=df_meta, aes(y=-5.25, x=Order, label=`CITEseq`), size=size_)+
+  geom_text(data=df_meta, aes(y=-7, x=Order, label=`TCRseq`), size=size_)+
+  geom_text(data=df_meta, aes(y=-8.75, x=Order, label=`MultiIF`), size=size_)+
+  geom_text(data=df_meta, aes(y=-10.5, x=Order, label=`MultiFlow`), size=size_)+
+  annotation_custom(grob=textGrob(label = "Entity", gp = gpar(cex=cex_), just="right"), xmin = pos_, xmax = pos_, ymin = 0, ymax = 0)+
+  annotation_custom(grob=textGrob(label = "Collection", gp = gpar(cex=cex_), just="right"), xmin = pos_, xmax = pos_, ymin = -1.75, ymax = -1.75)+
+  annotation_custom(grob=textGrob(label = "Sex", gp = gpar(cex=cex_), just="right"), xmin = pos_, xmax = pos_, ymin = -3.5, ymax = -3.5)+
+  annotation_custom(grob=textGrob(label = "CITE-seq", gp = gpar(cex=cex_), just="right"), xmin = pos_, xmax = pos_, ymin = -5.25, ymax = -5.25)+
+  annotation_custom(grob=textGrob(label = "TCR-seq", gp = gpar(cex=cex_), just="right"), xmin = pos_, xmax = pos_, ymin = -7, ymax = -7)+
+  annotation_custom(grob=textGrob(label = "Multi-IF", gp = gpar(cex=cex_), just="right"), xmin = pos_, xmax = pos_, ymin = -8.75, ymax = -8.75)+
+  annotation_custom(grob=textGrob(label = "Multi-flow", gp = gpar(cex=cex_), just="right"), xmin = pos_, xmax = pos_, ymin = -10.5, ymax = -10.5)+
+   scale_x_discrete(limits=as.character(1:101))+
+  scale_y_continuous(expand = c(0,0), name=NULL)+
+  geom_vline(xintercept = seq(0.5, nrow(df_meta), 1), size=1, color="white")+
+  scale_fill_manual(values = colors_characteristics)+
+  coord_cartesian(clip = "off")+
+  theme_void()+
+  theme(legend.position = "none",
+        plot.margin = unit(c(0,0.1,0,0.1), "lines"))
+
+plot_legend1 <- 
+  ggplot()+
+  geom_tile(data=df_meta, aes(y=4, x=Order, fill=Entity))+
+  scale_x_discrete(expand = c(0,0), name=NULL)+
+  scale_y_discrete(expand = c(0,0), name=NULL)+
+  geom_vline(xintercept = seq(0.5, 51.5, 1), color="white")+
+  scale_fill_manual(values = colors_characteristics, limits=df_meta$Entity %>% unique())+
+  guides(fill=guide_legend(direction = "horizontal", keywidth = 0.3, keyheight = 0.4))+
+  theme_void()+
+  mytheme_1+
+  theme(legend.position = "bottom",
+        legend.title = element_text(size=6, face = "bold"),
+        legend.text = element_text(size=6))
+
+legend1 <- get_legend(plot_legend1)
+
+plot_legend2 <-
+  ggplot()+
+  geom_tile(data=df_meta, aes(y=4, x=Order, fill=Sex))+
+  scale_x_discrete(expand = c(0,0), name=NULL)+
+  scale_y_discrete(expand = c(0,0), name=NULL)+
+  geom_vline(xintercept = seq(0.5, 51.5, 1), color="white")+
+  scale_fill_manual(values = colors_characteristics, limits=df_meta$Sex %>% unique())+
+  guides(fill=guide_legend(direction = "horizontal", keywidth = 0.3, keyheight = 0.4))+
+  theme_void()+
+  mytheme_1+
+  theme(legend.position = "bottom",
+        legend.title = element_text(size=6, face = "bold"),
+        legend.text = element_text(size=6))
+
+legend2 <- get_legend(plot_legend2)
+
+plot_legend3 <- 
+  ggplot()+
+  geom_tile(data=df_meta, aes(y=4, x=Order, fill=Status))+
+  scale_x_discrete(expand = c(0,0), name=NULL)+
+  scale_y_discrete(expand = c(0,0), name=NULL)+
+  geom_vline(xintercept = seq(0.5, 51.5, 1), color="white")+
+  scale_fill_manual(values = colors_characteristics, name="Collection",
+                    limits=filter(df_meta, Status!="NA")$Status %>% unique())+
+  guides(fill=guide_legend(direction = "horizontal", keywidth = 0.3, keyheight = 0.4))+
+  theme_void()+
+  mytheme_1+
+  theme(legend.position = "bottom",
+        legend.title = element_text(size=6, face = "bold"),
+        legend.text = element_text(size=6))
+
+legend3 <- get_legend(plot_legend3)
+
+```
+
+## Associations with overall T-cell frequencies
+```{r patient characteristics SF1 part 2}
+
+# Sex
+p2 <- df_meta %>% 
+  filter(!Entity %in% c("CLL", "rLN")) %>%
+  mutate(Tcells=ifelse(is.na(Tcells), TcellsDx, Tcells)) %>% 
+  filter(Tcells>1) %>% 
+  ggplot(aes(x=Sex, y=Tcells))+
+  geom_boxplot(width=0.35, size=0.25)+
+  #ggbeeswarm::geom_beeswarm(size=0.8, shape=21, stroke=0.25, cex = 2.75, aes(fill=Entity))+
+  stat_compare_means(comparisons = list(c("F", "M")), label.y = 78, size=2.25, bracket.size = 0.25)+
+  scale_fill_manual(values = hue_pal()(5))+
+  scale_x_discrete(labels=c("Female", "Male"))+
+  ylim(0,90)+
+  ylab("T-cells in %")+
+  mytheme_1+
+  theme(axis.title.x = element_blank(),
+        plot.tag = element_text(margin = unit(c(0,0,0,-0.75), "cm")))+
+  labs(tag = "B")
+
+# Status
+p3 <- df_meta %>% 
+  filter(!Entity %in% c("CLL", "rLN")) %>%
+  mutate(Tcells=ifelse(is.na(Tcells), TcellsDx, Tcells)) %>% 
+  filter(Tcells>1) %>% 
+  ggplot(aes(x=Status, y=Tcells))+
+  geom_boxplot(width=0.35, size=0.25)+
+  #ggbeeswarm::geom_beeswarm(size=0.8, shape=21, stroke=0.25, cex = 2.75, aes(fill=Entity))+
+  stat_compare_means(comparisons = list(c("Initial diagnosis", "Relapse")), label.y = 78, bracket.size = 0.25, size=2.25)+
+  scale_x_discrete(labels=c("Initial \ndiagnosis", "Relapse"))+
+  scale_fill_manual(values = hue_pal()(5))+
+  ylim(0,90)+
+  ylab("T-cells in %")+
+  mytheme_1+
+  theme(axis.title.x = element_blank())+
+  labs(tag = "C")
+
+# Age
+p5 <- df_meta %>% 
+  filter(!Entity %in% c("CLL", "rLN")) %>%
+  mutate(Tcells=ifelse(is.na(Tcells), TcellsDx, Tcells)) %>% 
+  filter(Tcells>1) %>% 
+  ggplot(aes(x=Age, y=Tcells))+
+  geom_point(size=1.25, shape=21, stroke=0.25, color="white", aes(fill=Entity))+
+  stat_cor(aes(label=..r.label..),  size=2.25, label.y = 82)+
+  scale_fill_manual(values = colors_characteristics, name=NULL, limits=c("DLBCL", "FL", "MCL", "MZL"))+
+  ylim(0,90)+
+  ylab("T-cells in %")+
+  mytheme_1+
+  theme(legend.position = "right",
+        axis.title.x = element_text(vjust = 6.5),
+        legend.box.margin = unit(c(0,0,0,-0.38), "cm"),
+        legend.key.width = unit("cm", x = 0.15),
+        legend.key.height = unit("cm", x = 0.35))+
+  labs(tag = "D")
+
+# Entity
+df_tmp <- df_meta %>% 
+  filter(!Entity %in% c("CLL", "rLN")) %>%
+  mutate(Tcells=ifelse(is.na(Tcells), TcellsDx, Tcells)) %>% 
+  filter(Tcells>1)
+  
+p6 <- ggplot(df_meta, aes(x=Entity, y=Tcells))+
+  geom_boxplot(width=0.4, size=0.25)+
+  ggbeeswarm::geom_beeswarm(size=0.75, shape=21, stroke=0.25, cex = 2.25, aes(fill=Entity))+
+  stat_compare_means(data=df_tmp %>% filter(!Entity %in% c("rLN")), 
+                     label.y = 83, label.x = 2.5, size=2.25, hjust=0.5, bracket.size = 0.25)+
+  scale_fill_manual(values = colors_characteristics, name=NULL, 
+                    limits=c("DLBCL", "FL", "MCL", "MZL", "rLN"))+
+  geom_segment(data = NULL, aes(x=1, xend=4, y=80, yend=80), size=0.1)+
+  ylim(0,90)+
+  ylab("T-cells in %")+
+  mytheme_1+
+  theme(axis.title.x = element_blank())+
+  labs(tag = "E")
+
+```
+
+## Assemble plot
+```{r assemble SF1, fig.height=5.5}
+
+# Plot
+wrap_plots(p1+labs(tag = "A")+p_ann+plot_layout(nrow = 2, heights = c(1, 0.5)))/
+  plot_spacer()/
+  wrap_plots(p2+p3+p5+p6+plot_layout(nrow = 1, widths = c(0.55,0.55,1,1)))+
+  plot_layout(heights = c(1.25,0.075,0.7))
+
+#ggsave(width = 18.9, height = 12, units = "cm", filename = "SF1.pdf")
+
+```
+
+## Legend
+```{r legend SF1, fig.height=0.5}
+
+# Legend
+as_ggplot(legend1)+as_ggplot(legend2)+as_ggplot(legend3)+plot_layout(nrow = 1, widths = c(1, 0.5, 0.75))
+#ggsave(width = 11.5, height = 1, units = "cm", filename = "S1_p1_legend.pdf")
+
+
+```
+
+# Supplementary Figure 2
+## Confusion Matrix
+```{r, confusion SF2, fig.height=4.5}
+
+confmat <- confusionMatrix(GBclasses_surface$test, GBclasses_surface$predict)
+
+conf_freq <- confmat$table %>% 
+  data.frame() %>% 
+  group_by(Reference) %>% 
+  mutate(Prop=Freq/sum(Freq)) 
+  
+plot_surface <- ggplot(conf_freq, aes(x=Reference, y=Prediction, fill=Prop, label=round(Prop, 2)))+
+  geom_tile()+
+  geom_text(data=conf_freq %>% filter(Prop>0.4), color="white", size=1.75)+
+    scale_fill_gradientn(colours = colorRampPalette(RColorBrewer::brewer.pal(9, "BuPu"))(100), name="Sensitivity",
+                       limits=c(0,0.9), breaks=seq(0,0.8,0.2))+
+  geom_hline(yintercept = seq(1.5, 13.5), color="black",linetype="solid", size=0.25, alpha=0.25)+
+  geom_vline(xintercept = seq(1.5, 13.5), color="black",linetype="solid", size=0.25, alpha=0.25)+
+  scale_y_discrete(expand = c(0,0), limits=factor(cluster_order), labels=unlist(labels_cl))+
+  scale_x_discrete(expand = c(0,0), limits=factor(cluster_order), labels=unlist(labels_cl))+
+  coord_fixed()+
+  ggtitle("Surface marker only")+
+  mytheme_1+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle=45, hjust = 1))+
+  labs(tag = "A")
+
+confmat_plus <- confusionMatrix(GBclasses_surfaceplus$test, GBclasses_surfaceplus$predict)
+
+conf_freq <- confmat_plus$table %>% 
+  data.frame() %>% 
+  group_by(Reference) %>% 
+  mutate(Prop=Freq/sum(Freq)) 
+  
+plot_surfaceplus <- ggplot(conf_freq, aes(x=Reference, y=Prediction, fill=Prop, label=round(Prop, 2)))+
+  geom_tile()+
+  geom_text(data=conf_freq %>% filter(Prop>0.4), color="white", size=1.75)+
+  scale_fill_gradientn(colours = colorRampPalette(RColorBrewer::brewer.pal(9, "BuPu"))(100), name="Sensitivity",
+                       limits=c(0,0.9), breaks=seq(0,0.8,0.2))+
+  geom_hline(yintercept = seq(1.5, 13.5), color="black",linetype="solid", size=0.25, alpha=0.25)+
+  geom_vline(xintercept = seq(1.5, 13.5), color="black",linetype="solid", size=0.25, alpha=0.25)+
+  scale_y_discrete(expand = c(0,0), limits=factor(cluster_order), labels=unlist(labels_cl))+
+  scale_x_discrete(expand = c(0,0), limits=factor(cluster_order), labels=unlist(labels_cl))+
+  coord_fixed()+
+  ggtitle("Surface plus FoxP3, IKZF3, and Ki67")+
+  mytheme_1+
+  theme(legend.position = "right",
+        legend.key.height = unit(0.35, "cm"),
+        legend.key.width = unit(0.28, "cm"),
+        legend.margin = margin(c(0,0.2,0,0), unit = "cm"),
+        axis.text.x = element_text(angle=45, hjust = 1))+
+  labs(tag = "B")
+
+plot_surface+plot_surfaceplus+plot_layout(guides = "collect", widths = c(1,1))
+
+#ggsave(width = 19, height = 9, units = "cm", filename = "SF2.pdf")
+
+```
+
+## Gating I
+Created using FlowJo. 
+```{r gating I}
+
+```
+
+# Supplementary Figure 3
+## Gating II
+Created using FlowJo. 
+```{r gating II}
+
+```
+
+# Supplementary Figure 4
+## Lasso model (beta coefficients)
+```{r lasso model SF4}
+
+mat_complete <- rbind(
+  df_facs %>% 
+    left_join(., df_meta %>% select(PatientID, `CITEseq`)) %>% 
+    filter(`CITEseq`=="-") %>% 
+    select(PatientID, Population, Prop=FACS),
+  df_freq %>% 
+    mutate(RNA=ifelse(is.nan(RNA), 0, RNA)) %>% 
+    select(PatientID, Population, Prop=RNA)) %>% 
+  filter(Population %in% df_pop$Population) %>% 
+  left_join(., df_pop) %>% 
+  select(-Population) %>% 
+  pivot_wider(names_from = "IdentI", values_from = "Prop", values_fill = 0) %>% 
+  column_to_rownames("PatientID") 
+
+total <- mat_complete %>% 
+  rownames_to_column("PatientID") %>% 
+  left_join(., df_meta %>% select(PatientID, Tcells)) %>% 
+  add_entity() %>% 
+  mutate_if(is.numeric, .funs = ~./100)
+
+cell_types <- total %>% select(-Entity, -PatientID) %>% colnames()
+
+gt <- my_glmnet(total)
+
+limits_coefs=c(cluster_order, "Tcells", "(Intercept)")
+
+plot_coefs <- gt$coefs %>% 
+  mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
+  ggplot(aes(x=beta, y=cell_type,  fill=cell_type, color=cell_type))+
+  geom_hline(yintercept = c(1.5, 5.5, 9.5, 10.5, 13.5)+2, linetype="solid", size=0.25, alpha=0.1)+
+  geom_bar(stat = "identity", width = 0.5)+
+  scale_y_discrete(limits=rev(limits_coefs), labels=c("Intercept", "T cells", rev(unlist(unname(labels_cl)))))+
+  scale_color_manual(limits=rev(limits_coefs), values = c("black", "black", rev(unname(colors_umap_cl[as.character(cluster_order)]))))+
+  scale_fill_manual(limits=rev(limits_coefs), values = c("black", "black", rev(unname(colors_umap_cl[as.character(cluster_order)]))))+
+  facet_wrap(~Entity, ncol=5)+
+  mytheme_1+
+  theme(axis.title.y = element_blank(),
+        panel.border = element_rect(size = 0.5))
+
+```
+
+## Multivariate Model
+```{r multivariate model SF4, fig.height=7}
+
+models <- list()
+entities <- c("Overall", "FL", "MZL", "MCL")
+
+for(i in colnames(mat_complete)){
+  for(e in entities) {
+  ent <- e
+  if(e=="Overall"){ent <- c("FL", "MZL", "MCL", "DLBCL")}
+    
+models[[paste0(i, "_", e)]] <- mat_complete %>% 
+  rownames_to_column("PatientID") %>% 
+  pivot_longer(cols=2:ncol(.), names_to = "IdentI", values_to = "Prop") %>% 
+  left_join(., df_meta %>% select(PatientID, Status, Pretreatment, Sex, Entity, Department, Age, Subtype, Tcells, `CITEseq`) %>% distinct, 
+            by="PatientID") %>%
+  filter(Entity %in% ent) %>% 
+  filter(IdentI==i) %>% 
+  glm(formula = Prop ~ Status + Age + Sex, 
+      family = "gaussian") %>% summary()
+
+models[[paste0(i, "_", e)]] <- models[[paste0(i, "_", e)]]$coefficients %>% 
+  `colnames<-`(c("Estimate", "Std.error", "t.value", "p.value")) %>% 
+  data.frame() %>% 
+  dplyr::mutate(IdentI=as.character(i)) %>% 
+  rownames_to_column("Parameter")
+
+}
+}
+
+for(i in colnames(mat_complete)){
+  ent <- "DLBCL"
+  e <- "DLBCL"
+  models[[paste0(i, "_", e)]] <- mat_complete %>% 
+    rownames_to_column("PatientID") %>% 
+    pivot_longer(cols=2:ncol(.), names_to = "IdentI", values_to = "Prop") %>% 
+    left_join(., df_meta %>% select(PatientID, Status, Pretreatment, Sex, Entity, Department, Age, Subtype, Tcells, `CITEseq`) %>% distinct, 
+              by="PatientID") %>%
+    filter(Entity %in% ent) %>% 
+    filter(IdentI==i) %>% 
+    glm(formula = Prop ~ Status + Age + Sex + Subtype, 
+        family = "gaussian") %>% summary()
+
+models[[paste0(i, "_", e)]] <- models[[paste0(i, "_", e)]]$coefficients %>% 
+  `colnames<-`(c("Estimate", "Std.error", "t.value", "p.value")) %>% 
+  data.frame() %>% 
+  dplyr::mutate(IdentI=as.character(i)) %>% 
+  rownames_to_column("Parameter")
+
+}
+
+p.value <- bind_rows(models, .id = "model") %>% 
+  filter(Parameter!="(Intercept)") %>% 
+  mutate(Entity=strsplit(model, split = "_") %>% sapply(., "[[", 2)) %>% 
+  group_by(IdentI, Entity) %>% 
+  mutate(p.adj=p.adjust(p.value, method = "BH")) %>% 
+  mutate(sign=ifelse(Estimate<0 & p.adj<0.05, "-", NA)) %>% 
+  mutate(sign=ifelse(Estimate>0 & p.adj<0.05, "+", sign)) %>% 
+  mutate(Entity=factor(Entity, levels = c("Overall", "DLBCL", "MCL", "FL", "MZL")))
+
+
+plot_multi <- ggplot()+
+  geom_point(data=p.value %>% filter(Entity=="Overall"), aes(x=IdentI, y=Parameter, size=-log10(p.adj), fill=t.value), shape=21, stroke=0.25,
+             position = position_nudge(y=0.16))+
+  geom_point(data=p.value %>% filter(Entity!="Overall"), aes(x=IdentI, y=Parameter, size=-log10(p.adj), fill=t.value, group=Entity), shape=21, stroke=0.25, 
+             position = ggpp::position_dodgenudge(y = -0.14, width = 0.78))+
+  geom_text(data=p.value %>% filter(Entity=="Overall", p.adj<0.05), aes(x=IdentI, y=Parameter, label=round(p.adj, 3)), hjust=0.5, nudge_y = 0.4, size=2.25)+
+  geom_text(data=p.value %>% filter(Entity=="Overall", p.adj<0.05), aes(x=IdentI, y=Parameter, label=sign), hjust=0.5, nudge_y = 0.18, size=2.5)+
+  geom_text(data=p.value %>% filter(Entity!="Overall"), aes(x=IdentI, y=Parameter, label=sign, group=Entity), size=2.5, 
+             position = ggpp::position_dodgenudge(y = -0.11, width = 0.78))+
+  scale_x_discrete(limits=factor(cluster_order), labels=unlist(labels_cl))+
+  scale_size_continuous(range=c(0.25,3.5), limits=c(0,3), name=expression('-log'[10]~'p'))+
+  scale_fill_gradientn(colors=brewer.pal(9, name = "RdBu"), limits=c(-5, 5), breaks=c(-3,0,3), name="Statistic")+
+  guides(fill=guide_colorbar(barwidth = 2.5))+
+  guides(size=guide_legend(keywidth = 0.3))+
+  geom_hline(yintercept = seq(1,6,1), color="grey90", size=0.25)+
+  geom_vline(xintercept = seq(1.5,13.5,1), color="grey90", size=0.25)+
+  scale_y_discrete(limits=rev(c("StatusRelapse",  "Age", "SexM", "Subtypenon-GCB")),
+                   labels=rev(c("<b style='color:#B2182B'>Initial diagnosis </b><br>vs. <b style='color:#2166AC'>Relapse</b>",
+                                "<b style='color:#B2182B'>Younger </b>vs.<br><b style='color:#2166AC'>Older</b>",
+                                "<b style='color:#B2182B'>Female </b>vs.<br><b style='color:#2166AC'>Male</b>",
+                                "<b style='color:#B2182B'>GCB</b> vs.<br><b style='color:#2166AC'>non-GCB</b><br>[only DLBCL]")))+
+  mytheme_1+
+  theme(axis.title = element_blank(),
+        legend.position = "top",
+        plot.title = element_text(margin = unit(c(0,0,0,0), units = "cm")),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.border = element_rect(size=0.5),
+        legend.key.height = unit(x = 0.3, units = "cm"),
+        legend.box.margin = unit(c(0,-8.5,-0.35,0), "cm"),
+        plot.margin = unit(c(0,0.25,0,0.25), "cm"),
+        legend.key.width = unit(x = 0.35, units = "cm"),
+        axis.text.y = element_markdown(hjust = 1,  lineheight = 1.2))+
+  labs(tag = "B")
+
+plot_coefs+labs(tag = "A")+plot_multi+plot_layout(heights = c(1,1))
+
+#ggsave(width = 19, height = 15, units = "cm", filename = "SF4.pdf")
+
+```
+
+# Supplementary Figure 5
+## Proportions of T-cell subsets in 5' scRNA versus CITE-seq
+### Data handling
+```{r data handling SF5}
+
+df_freq_5prime <- DFtotal_5prime %>% 
+  select(Barcode_full, IdentI, PatientID) %>% 
+  distinct() %>% 
+  add_prop(vars = c("PatientID", "IdentI"), group.vars = 1) %>% 
+  mutate(Class="5prime")
+
+df_freq_3prime <- df_comb %>% 
+  add_prop(vars = c( "PatientID", "IdentI"), group.vars = 1) %>% 
+  mutate(Class="3prime") %>% 
+  filter(PatientID %in% DFtotal_5prime$PatientID)
+
+df_freq_prime <- rbind(df_freq_3prime, df_freq_5prime) %>% 
+  mutate(Prop=100*Prop) %>% 
+  pivot_wider(names_from = "Class", values_from = "Prop", values_fill = 0) 
+
+```
+
+### Correlation plots
+```{r cor plots SF5}
+
+this_theme <- theme(plot.margin = unit(c(0,0.25,0.1,0), units = "cm"),
+  plot.title = element_text(vjust = -1),
+  axis.title = element_blank(),
+  axis.text = element_text(size=7, color="black"))
+
+cor_plots_prime <- list()
+
+cor_plots_prime[["TFH"]] <- 
+  df_freq_prime %>% 
+  filter(IdentI==6) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["6"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["6"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,60), breaks = c(0, 20, 40, 60))+
+  scale_y_continuous(limits = c(0,60), breaks = c(0, 20, 40, 60))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["6"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  this_theme
+
+cor_plots_prime[["TPR"]] <- df_freq_prime %>% 
+   filter(IdentI==14) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["14"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["14"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,12), breaks = c(0, 4, 8, 12))+
+  scale_y_continuous(limits = c(0,12), breaks = c(0, 4, 8, 12))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["14"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  this_theme+
+  theme(axis.title.y = element_text(size=7))
+
+cor_plots_prime[["TDN"]] <- df_freq_prime %>% 
+  filter(IdentI==19) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["19"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["19"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,8), breaks = c(0, 2, 4, 6, 8))+
+  scale_y_continuous(limits = c(0,8), breaks = c(0, 2, 4, 6, 8))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["19"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub3
+
+cor_plots_prime[["THCM2"]] <- df_freq_prime %>% 
+  filter(IdentI==9) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["9"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["9"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,15), breaks = c(0, 5, 10, 15))+
+  scale_y_continuous(limits = c(0,15), breaks = c(0, 5, 10, 15))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["9"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  this_theme
+
+cor_plots_prime[["THCM1"]] <- df_freq_prime %>% 
+  filter(IdentI==2) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["2"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["2"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
+  scale_y_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["2"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  this_theme
+
+
+cor_plots_prime[["THNaive"]] <- df_freq_prime %>% 
+  filter(IdentI==1) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["1"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["1"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45))+
+  scale_y_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["1"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  this_theme
+
+cor_plots_prime[["TREGCM1"]] <- df_freq_prime %>% 
+  filter(IdentI==8) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["8"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["8"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["8"]])+
+    scale_x_continuous(limits = c(0,25), breaks = c(0, 8, 16, 24))+
+  scale_y_continuous(limits = c(0,25), breaks = c(0, 8, 16, 24))+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  this_theme
+
+cor_plots_prime[["TREGEM2"]] <- df_freq_prime %>% 
+  filter(IdentI==11) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["11"]],size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["11"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,16), breaks = c(0, 5, 10, 15))+
+  scale_y_continuous(limits = c(0,16), breaks = c(0, 5, 10, 15))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["11"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub3
+
+cor_plots_prime[["TREGEM1"]] <- df_freq_prime %>% 
+  filter(IdentI==15) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["15"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["15"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
+  scale_y_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["15"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  this_theme+
+  theme(axis.title.y = element_text(size=7),
+        axis.title.x = element_text(size=7))
+
+cor_plots_prime[["TREGCM2"]] <- df_freq_prime %>% 
+  filter(IdentI==13) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["13"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["13"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
+  scale_y_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["13"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  this_theme
+
+cor_plots_prime[["TTOXNaive"]] <-df_freq_prime %>% 
+  filter(IdentI==12) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["12"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["12"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,27), breaks = c(0, 8, 16, 24))+
+  scale_y_continuous(limits = c(0,27), breaks = c(0, 8, 16, 24))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["12"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub3
+ 
+cor_plots_prime[["TTOXEM3"]] <- df_freq_prime %>% 
+  filter(IdentI==5) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color="#b50923", size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color="#b50923", se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
+  scale_y_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["5"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub3
+
+cor_plots_prime[["TTOXEM1"]] <- df_freq_prime %>% 
+  filter(IdentI==3) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color="#fea044", size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x,na.rm = T,
+              color="#fea044", se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,50), breaks = c(0, 15, 30, 45))+
+  scale_y_continuous(limits = c(0,50), breaks = c(0, 15, 30, 45))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["3"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub3
+
+cor_plots_prime[["TTOXEM2"]] <- df_freq_prime %>% 
+  filter(IdentI==16) %>% 
+  ggplot(aes(y=`5prime`, x=`3prime`))+
+  geom_point(color=colors_umap_cl[["16"]], size=0.65, alpha=0.75)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_umap_cl[["16"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.9))+
+  scale_x_continuous(limits = c(0,15), breaks = c(0, 4, 8, 12))+
+  scale_y_continuous(limits = c(0,15), breaks = c(0, 4, 8, 12))+
+  labs(x="3' scRNA - %", y="5' scRNA - %")+
+  ggtitle(labels_cl[["16"]])+
+  theme_bw()+
+  coord_fixed()+
+  mytheme_1+
+  theme_axis_sub3
+
+cor_plots_prime_all <- cor_plots_prime$TPR+labs(tag ="A")+
+  cor_plots_prime$THNaive+cor_plots_prime$THCM1+cor_plots_prime$THCM2+cor_plots_prime$TFH+
+  cor_plots_prime$TREGCM1+cor_plots_prime$TREGCM2+cor_plots_prime$TREGEM1+cor_plots_prime$TREGEM2+
+  cor_plots_prime$TTOXNaive+cor_plots_prime$TTOXEM1+cor_plots_prime$TTOXEM2+cor_plots_prime$TTOXEM3+
+  cor_plots_prime$TDN+
+  plot_layout(nrow = 2)
+
+df_freq_prime %>% 
+  group_by(IdentI) %>% 
+  summarise(R=cor.test(`3prime`, `5prime`)$estimate) %>% pull(R) %>% median()
+
+```
+
+## CD4 and CD8 expression in clonal T-cells
+```{r CD4 and CD8 expression in SF5}
+
+lim_CD4 <- 0.3
+lim_CD8 <- 0.6
+
+df_clone_expr <- lapply(sobjs_T_5prime, function(sobj){
+  FetchData(sobj, vars=c("CD4", "CD8A")) %>% 
+              data.frame() %>% 
+              rownames_to_column("Barcode_full")
+  }) %>% bind_rows() %>% remove_rownames()
+
+df_clone_CD4 <- DFtotal_5prime %>% 
+  select(Barcode_full, PatientID, refUMAP_1, refUMAP_2, Entity, IdentI, raw_clonotype_id) %>% 
+  distinct() %>% 
+  add_count(IdentI, PatientID, raw_clonotype_id) %>% 
+  left_join(., df_clone_expr) %>% 
+  mutate(IdentI_new=factor(IdentI, levels = cluster_order, labels = labels_cl_parsed)) %>% 
+  filter(IdentI %in% c(3,5)) %>% 
+  mutate(Expanded=n>2) %>% 
+  mutate(CD4CD8=case_when(CD4 > lim_CD4 & CD8A < lim_CD8 ~ "CD4pos",
+                          CD4 < lim_CD4 & CD8A > lim_CD8 ~ "CD8pos",
+                          CD4 > lim_CD4 & CD8A > lim_CD8 ~ "CD4CD8pos",
+                          CD4 < lim_CD4 & CD8A < lim_CD8 ~ "CD4CD8neg"))
+  
+df_clone_CD4_freq <- df_clone_CD4 %>% 
+  drop_na() %>% 
+  add_prop(vars = c("IdentI", "Expanded", "CD4CD8"), group.vars = c(1,2)) %>% 
+  fill_zeros(names_from = "IdentI", values_from = "Prop") %>% 
+  mutate(Prop=round(Prop, 2)) %>% 
+  left_join(., data.frame(CD4CD8=c("CD4CD8neg", "CD4pos", "CD4CD8pos",  "CD8pos"), 
+                          CD8=c(-0.35, -0.35, 3.7, 3.7),
+                          CD4=c(-0.35, 1.9, 1.9, -0.35))) %>% 
+    mutate(IdentI_new=factor(IdentI, levels = cluster_order, labels = labels_cl_parsed)) 
+  
+plot_expr1 <- ggplot()+
+  geom_point(data=df_clone_CD4 %>% filter(n<3), inherit.aes = F, aes(x=CD4, y=CD8A, color=IdentI), 
+             position = position_jitter(width = 0.1, height = 0.1),  na.rm = T,
+             size=0.25, alpha=0.25, stroke=0)+
+  scale_color_manual(values = colors_umap_cl, guide="none")+
+  scale_fill_manual(values = colors_umap_cl, guide="none")+
+  geom_text(data=df_clone_CD4_freq %>% filter(Expanded==F), inherit.aes = F, aes(x=CD4, y=CD8, label=Prop), size=2.5, alpha=1)+
+  geom_hline(yintercept = 0.6, linetype="dashed", size=0.25)+
+  geom_vline(xintercept = 0.3, linetype="dashed", size=0.25)+
+  scale_x_continuous(breaks = c(0,0.5,1,1.5,2), limits=c(-0.5, 2.4))+
+  scale_y_continuous(breaks = c(0,1,2,3), limits=c(-0.5, 4))+
+  labs(x="<i>CD4</i> - RNA expression",
+       y="<i>CD8</i> - RNA expression",
+       title="Clone size < 3",
+       tag = "B")+
+  facet_wrap(~IdentI_new, nrow = 1, labeller = label_parsed)+
+  mytheme_1+
+  theme(axis.title.x = element_textbox(size=7, halign = 0.5, margin = unit(units = "cm", c(0.1,0,0,0))),
+        axis.title.y = element_textbox(size=7, orientation = "left-rotated", margin = unit(units = "cm", c(0,0,0.1,0))),
+        panel.border = element_rect(size=0.4))
+
+plot_expr2 <- ggplot()+
+  geom_point(data=df_clone_CD4 %>% filter(n>2), inherit.aes = F, aes(x=CD4, y=CD8A, color=IdentI),
+             position =  position_jitter(width = 0.1, height = 0.1), na.rm = T,
+             size=0.25, alpha=0.25, stroke=0)+
+  scale_color_manual(values = colors_umap_cl, guide="none")+
+  scale_fill_manual(values = colors_umap_cl, guide="none")+
+  scale_size_continuous(range=c(1, 5), limits=c(3, 50), breaks=c(3, 20, 35, 50),
+                        labels=c("3", "20", "35", "> 50"), name = "Clonotype size")+
+  geom_hline(yintercept = 0.6, linetype="dashed", size=0.25)+
+  geom_vline(xintercept = 0.3, linetype="dashed", size=0.25)+
+  geom_text(data=df_clone_CD4_freq %>% filter(Expanded==T), inherit.aes = F, aes(x=CD4, y=CD8, label=Prop), size=2.5, alpha=1)+
+  facet_wrap(~IdentI_new, nrow = 1, labeller = label_parsed)+
+  scale_x_continuous(breaks = c(0,0.5,1,1.5,2), limits=c(-0.5, 2.4))+
+  scale_y_continuous(breaks = c(0,1,2,3), limits=c(-0.5, 4))+
+  labs(x="<i>CD4</i> - RNA expression",
+       y="<i>CD8</i> - RNA expression",
+       title="Clone size > 2",
+       tag = "C")+
+  facet_wrap(~IdentI_new, nrow = 1, labeller = label_parsed)+
+  mytheme_1+
+  theme(axis.title.x = element_textbox(size=7, halign = 0.5, margin = unit(units = "cm", c(0.1,0,0,0))),
+        axis.title.y = element_textbox(size=7, orientation = "left-rotated", margin = unit(units = "cm", c(0,0,0.1,0))),
+        panel.border = element_rect(size=0.4))
+
+```
+
+## Assemble plot
+```{r assemble SF5}
+
+cor_plots_prime_all/wrap_plots(plot_expr1+plot_spacer()+plot_expr2+plot_layout(widths = c(1,0.1,1)))+
+  plot_layout(heights = c(1.6,1))
+
+#ggsave(width = 19, height = 12.5, units = "cm", filename = "SF5.pdf")
+
+```
+
+## TCR diversity
+### Read
+```{r TCR diversity read}
+
+# Single cell T-cell receptor data read by immunarch package
+# Can be downloaded at HeiData database (https://heidata.uni-heidelberg.de) under accession number 0SNSFB 
+DF_immunarchTCR <- repLoad(list.files(path = "countMatrices", pattern = "TCRrep", full.names = T))
+DF_immunarchTCR$meta$Sample <- strsplit(DF_immunarchTCR$meta$Sample, split = "_") %>% sapply("[[", 1)
+names(DF_immunarchTCR$data) <- DF_immunarchTCR$meta$Sample
+
+```
+
+### Plot
+```{r TCR diversity plot, fig.height=3.5}
+
+plots <- list()
+for(i in unique(DFtotal_5prime$PatientID)){
+set.seed(substr(i, 4,7) %>% as.numeric()+5)
+plots[[i]] <- 
+  DFtotal_5prime %>% filter(PatientID==i) %>% 
+  select(Barcode_full, PatientID, raw_clonotype_id) %>% 
+  distinct() %>% 
+  dplyr::count(raw_clonotype_id) %>% 
+  drop_na() %>% 
+  mutate(Prop=n/sum(n)) %>% 
+  dplyr::arrange(-n) %>% 
+  mutate(Cumsum=cumsum(n)) %>% 
+  mutate(Max=sum(n)) %>% 
+  filter(Cumsum < 0.1*Max) %>% 
+  mutate(new_id=as.character(1:nrow(.))) %>% 
+  mutate(PatientID=i) %>% 
+  add_entity() %>% 
+  mutate(PatientID_new=paste0(PatientID, " (", Entity, ")")) %>% 
+  ggplot(aes(x=new_id, y=n))+
+  geom_segment(aes(x=new_id, xend=new_id, y=0, yend=n), size=0.2)+
+  facet_wrap(~PatientID_new)+
+  xlab("Clonotype ID")+
+  scale_y_continuous(name =  "Clonotype size")+
+  scale_x_discrete(limits=sample(as.character(1:195), 195), name="Unique clonotype ID")+
+  mytheme_1+
+  theme(legend.position = "none",
+        panel.border = element_rect(size=0.4),
+        strip.background = element_rect(colour = NA),
+        axis.title.x = element_text(vjust = 5),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+
+}
+
+imm_raref <- repDiversity(DF_immunarchTCR$data, "raref", .verbose = F) %>% 
+  rename(PatientID=Sample) %>% 
+  add_entity() 
+
+tops <- imm_raref %>% 
+  group_by(PatientID) %>% 
+  top_n(n=1, Size) %>% 
+  mutate(Mean=ifelse(PatientID=="LN0302", 5.0, Mean)) %>% 
+  mutate(Size=ifelse(PatientID!="LN0217", Size+6, Size)) 
+
+plot_rare <- imm_raref %>%
+  ggplot(aes(x=Size, y=Mean, group=PatientID, color=Entity))+
+  geom_line(linetype="solid", size=0.25)+
+  geom_label(data=tops, aes(x=Size, y=Mean, label=PatientID),  size=2.25, 
+                            show.legend = F, fill="white", color="white", 
+                            label.padding = unit(units = "cm", 0.02), label.size = 0)+
+  geom_text(data=tops, aes(x=Size, y=Mean, label=PatientID), size=2, show.legend = F)+
+  guides(color=guide_legend(override.aes = list(size=0.35, linetype="solid")))+
+  scale_color_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
+  ylab("Estimated diversity")+
+  xlab("Clone size")+
+  xlim(0, 70)+
+  mytheme_1+
+  theme(legend.position = "top",
+        legend.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.spacing.x = unit("cm", x = 0.05),
+        legend.box.margin = unit(c(0,0,-0.95,0), "cm"),
+        panel.border = element_rect(size=0.4),
+        legend.key.height = unit("cm", x = 0.36),
+        legend.key.width = unit("cm", x = 0.5))+
+  labs(tag = "D")
+
+plot_rare+wrap_plots((plots$LN0132+theme(axis.title.x = element_blank())+labs(tag = "E"))/plots$LN0217+labs(tag = "F"))+
+  plot_layout(widths = c(1,1.75))
+  
+#ggsave(width = 19, height = 8, units = "cm", filename = "SF5.pdf")
+
+```
+
+# Supplementary Figure 6
+## T-cell exhaustion UMAP
+### Calculate exhaustion module
+```{r calculate exhaustion module}
+
+exhausted_cells <- ttox@meta.data %>%
+  mutate(Exhausted=ifelse( Pseudotime>=24, "yes", "no")) %>% 
+  filter(Exhausted=="yes") %>% rownames()
+
+Combined_T@meta.data$Exhausted <- Combined_T@meta.data %>% 
+  mutate(Exhausted=Barcode_full %in% exhausted_cells) %>% 
+  pull(Exhausted)
+
+Idents(Combined_T) <- "Exhausted"
+
+module_exhausted <- FindMarkers(Combined_T, ident.1 = "TRUE", assay = "integratedRNA", test.use = "roc") %>% 
+  rownames_to_column("Gene") %>% 
+  mutate(Module=paste0(Gene, ifelse(myAUC>0.5, "+", "-")),
+         Assay="RNA")
+
+module_exhausted_prot <- FindMarkers(Combined_T, ident.1 = "TRUE", assay = "integratedADT", test.use = "roc") %>% 
+  rownames_to_column("Gene") %>% 
+  mutate(Module=paste0(Gene, ifelse(myAUC>0.5, "+", "-")),
+         Assay="Protein")
+
+#module_exhausted --> Supplementary Table 5
+#WriteXLS::WriteXLS(rbind(module_exhausted, module_exhausted_prot), ExcelFileName = "SuppTable5.xlsx")
+
+module_exhausted <- list(module_exhausted$Module)
+names(module_exhausted) <- "exhausted"
+
+Combined_T <- UCell::AddModuleScore_UCell(Combined_T, features = module_exhausted)
+
+```
+
+### Plot exhaustion module
+```{r plot exhaustion module}
+
+set.seed(1)
+plot_exh <- FetchData(Combined_T, vars = c("wnnUMAP_1", "wnnUMAP_2", "exhausted_UCell")) %>% 
+  sample_frac(0.2) %>% 
+  ggplot(aes(x=wnnUMAP_1, y=wnnUMAP_2, fill= exhausted_UCell))+
+  ggrastr::geom_point_rast(size=0.25, stroke=0, shape=21, raster.dpi = 600, alpha=0.75)+
+  scale_fill_gradientn(colours = brewer.pal(n = 9, name = "YlOrRd")[2:9],
+                       name="Score")+
+  xlab("wnnUMAP-1")+
+  ylab("wnnUMAP-2")+
+  ggtitle("Exhaustion signature")+
+  mytheme_1+
+  theme(panel.border = element_rect(size = 0.2),
+        axis.title.x = element_text(margin = unit(units = "cm", c(-0.75,0,0,0))),
+        #legend.margin = margin(c(0,0,0,-0.35), unit = "cm"),
+        legend.box.margin = unit(c(0,0,0,-0.35), units = "cm"),
+        legend.title = element_text(size=6),
+        legend.text = element_text(size=6),
+        legend.position = "right",
+        plot.title = element_text(face = "plain", vjust = -0.5),
+        panel.background = element_rect(fill=NA),
+        legend.key.height = unit(units="cm", 0.2),
+        legend.key.width = unit(units="cm", 0.15),
+        legend.box.background = element_rect(fill=NA, color=NA),
+        legend.background = element_rect(fill=NA, color=NA)
+        )+
+  labs(tag="A")
+
+```
+
+## Association with cell-of-origin in DLBCL
+```{r SF6 part 1}
+
+### Schmitz
+p1 <- left_join(df_surv_schmitz, df_ttoxcompl_schmitz) %>% 
+  drop_na() %>% 
+  ggplot(aes(x=Subtype, y=Exhausted/Absolute, group=Subtype))+
+  geom_boxplot(outlier.alpha = 0, width=0.4, size=0.25)+
+  stat_compare_means(size=2.25, vjust = 1, aes(label=paste0("p = ", ..p.format..)))+
+  stat_compare_means(comparisons = list(c("ABC", "GCB")), size=2.25)+
+  scale_y_continuous(limits=c(0, 0.65), name = "Exhausted T-cells")+
+  #ggtitle("Schmitz et al. 2018")+
+  xlab("Cell-of-origin")+
+  mytheme_1+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        #axis.title.x = element_text(margin = unit(units = "cm", c(-0.1,0,0,0))),
+        plot.title = element_text(face = "plain", vjust = -0.5))+
+  labs(tag = "B")
+
+### Chapuy
+p2 <- left_join(df_surv_chapuy, df_ttoxcompl_chapuy) %>% 
+  drop_na() %>% 
+  ggplot(aes(x=Subtype, y=Exhausted/Absolute, group=Subtype))+
+  geom_boxplot(outlier.alpha = 0, width=0.4, size=0.25)+
+  stat_compare_means(size=2.25, vjust = 1, aes(label=paste0("p = ", ..p.format..)))+
+  scale_y_continuous(limits=c(0, 0.65), name="Exhausted T-cells")+
+  #ggtitle("Chapuy et al. 2018")+
+  xlab("Cell-of-origin")+
+  mytheme_1+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        #axis.title.x = element_text(margin = unit(units = "cm", c(-0.1,0,0,0))),
+        plot.title = element_text(face = "plain", vjust = -0.5))+
+  labs(tag = "C")
+
+```
+
+## Association with genetic Subtype
+```{r SF6 part 2}
+
+### Schmitz
+p3 <- left_join(df_surv_schmitz, df_ttoxcompl_schmitz) %>% 
+  drop_na() %>% 
+  ggplot(aes(x=GenSubtype, y=Exhausted/Absolute, group=GenSubtype))+
+  geom_boxplot(outlier.alpha = 0, width=0.4, size=0.25)+
+  stat_compare_means(size=2.25, vjust = 1, aes(label=paste0("p = ", ..p.format..)))+
+  scale_y_continuous(limits = c(0, 0.65), name="Exhausted T-cells")+
+  #ggtitle("Schmitz et al. 2018")+
+  xlab("Cluster")+
+  mytheme_1+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(face = "plain", vjust = -0.5),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        #axis.title.x = element_text(margin = unit(units = "cm", c(-0.1,0,0,0)))
+        )
+
+### Chapuy
+p4 <- left_join(df_surv_chapuy, df_ttoxcompl_chapuy) %>% 
+  drop_na() %>% 
+  mutate(Cluster=paste0("C", Cluster)) %>% 
+  ggplot(aes(x=Cluster, y=Exhausted/Absolute, group=Cluster))+
+  geom_boxplot(outlier.alpha = 0, width=0.4, size=0.25)+
+  stat_compare_means(size=2.25, vjust = 1, aes(label=paste0("p = ", ..p.format..)))+
+  scale_y_continuous(limits=c(0, 0.65), name="Exhausted T-cells")+
+  #ggtitle("Chapuy et al. 2018")+
+  xlab("Cluster")+
+  mytheme_1+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(face = "plain", vjust = -0.5),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        #axis.title.x = element_text(margin = unit(units = "cm", c(-0.65,0,0,0)))
+        )
+
+```
+
+## Assemble plot
+### Part 1
+```{r assemble plot SF6 part 1, fig.height=2.5}
+
+plot_exh+p1+p3+p2+p4+plot_layout(nrow = 1, widths = c(1.4,0.75,1,0.75,1))
+
+#ggsave(width = 19, height = 6, units = "cm", filename = "SF6_p1.pdf")
+
+```
+
+
+## Associations with genetic features
+### Mutations
+```{r mutations SF6}
+
+pairs <- list(c(1:42), c(43:85))
+
+df_mut <- df_snvs_chapuy %>% 
+  filter(Description=="Mutation", value %in% c(0,2)) %>% 
+  mutate(value=factor(value, levels = c("0", "2"), labels = c("wt", "mut"))) %>% 
+  group_by(Name, value) %>%
+  dplyr::summarise(MeanExhausted=mean(Exhausted/Absolute)) %>% 
+  mutate(MeanExhausted=ifelse(MeanExhausted>0.15, 0.15, MeanExhausted),
+         Group=case_when(Name %in% unique(.$Name)[pairs[[1]]] ~ "group1",
+                         Name %in% unique(.$Name)[pairs[[2]]] ~ "group2")) 
+
+p.values <- df_snvs_chapuy %>% 
+  filter(Description=="Mutation", value %in% c(0,2)) %>% 
+  mutate(Exhausted=Exhausted/Absolute) %>% 
+  compare_means(formula = Exhausted ~ value, group.by = "Name", p.adjust.method = "BH") %>% 
+  filter(p<0.05) %>% 
+  left_join(., df_mut %>% select(Name, Group), by="Name")
+
+p5 <- df_mut %>% 
+  ggplot(aes(x=value, y=Name, fill=MeanExhausted))+
+  geom_tile()+
+  scale_fill_gradientn(name="Expression", colours = brewer.pal(5, "PRGn"), limits=c(0,0.17))+
+  geom_vline(xintercept = 1.5, color="black", size=0.25)+
+  geom_segment(data=data.frame(y=seq(1.5, 42.5,1)), inherit.aes = F, 
+               aes(y = y, yend = y, x=0.05, xend=2.8), color="white", size=0.25)+
+  geom_text(data = p.values, inherit.aes = F, aes(y=Name, x=2.8, label=round(p, 2)), size=2.25)+
+  facet_wrap(~Group, ncol=3, scales = "free_y")+
+  ggtitle("Mutations")+
+  coord_cartesian(clip = "off")+
+  mytheme_1+
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        axis.text.x = element_text(angle=45, hjust=1, size=6.5),
+        axis.ticks = element_blank(),
+        axis.text.y = element_text(size=6.25, margin = unit(c(0,-0.4,0,0), units = "cm")),
+        plot.margin = unit(units = "cm", c(0,1.25,0,0)),
+        axis.title = element_blank(),
+        panel.border = element_blank())+
+  labs(tag = "D")
+
+```
+
+### Copy number gain
+```{r copy number SF6}
+
+df_gain <- df_snvs_chapuy %>% 
+  filter(Description=="CN gain") %>% 
+  mutate(value=factor(value, levels = c("0", "1", "2"), labels = c("wt", "gain", "gain"))) %>% 
+  group_by(Name, value) %>%
+  dplyr::summarise(MeanExhausted=mean(Exhausted/Absolute)) 
+
+p.values <- df_snvs_chapuy %>% 
+  filter(Description=="CN gain") %>% 
+  mutate(Exhausted=Exhausted/Absolute) %>% 
+  mutate(value=factor(value, levels = c("0", "1", "2"), labels = c("wt", "gain", "gain"))) %>% 
+  compare_means(formula = Exhausted ~ value, group.by = "Name", p.adjust.method = "BH") %>% 
+  filter(p<0.05)
+
+p6 <- df_gain %>% 
+  ggplot(aes(x=value, y=Name, fill=MeanExhausted))+
+  geom_tile()+
+  scale_fill_gradientn(name="Expression", colours = brewer.pal(5, "PRGn"), limits=c(0,0.17))+
+  geom_vline(xintercept = 1.5, color="black", size=0.25)+
+  geom_segment(data=data.frame(y=seq(1.5, 31.5,1)), inherit.aes = F, 
+               aes(y = y, yend = y, x=0.25, xend=2.8), color="white", size=0.25)+
+  geom_text(data = p.values, inherit.aes = F, aes(y=Name, x=2.8, label=round(p, 2)), size=2.25)+
+  coord_cartesian(clip = "off")+
+  ggtitle("CN gain")+
+  mytheme_1+
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        axis.text.x = element_text(angle=45, hjust=1, size=6.5),
+        axis.ticks = element_blank(),
+        axis.text.y = element_text(size=6.25, margin = unit(c(0,-0.15,0,0), units = "cm")),
+        plot.margin = unit(units = "cm", c(0,1.25,0,0)),
+        axis.title = element_blank(),
+        panel.border = element_blank())+
+  labs(tag = "E")
+
+```
+
+### Copy number loss
+```{r copy number loss SF6}
+
+df_loss <- df_snvs_chapuy %>% 
+  filter(Description=="CN loss") %>% 
+  mutate(value=factor(value, levels = c("0", "1", "2"), labels = c("wt", "loss", "loss"))) %>% 
+  group_by(Name, value) %>%
+  dplyr::summarise(MeanExhausted=mean(Exhausted/Absolute)) 
+
+p.values <- df_snvs_chapuy %>% 
+  filter(Description=="CN loss") %>% 
+  mutate(Exhausted=Exhausted/Absolute) %>% 
+  mutate(value=factor(value, levels = c("0", "1", "2"), labels = c("wt", "loss", "loss"))) %>% 
+  compare_means(formula = Exhausted ~ value, group.by = "Name", p.adjust.method = "BH") %>% 
+  filter(p<0.05) %>% 
+  mutate(p=ifelse(p<0.005, 0.0051, p))
+
+p7 <- df_loss %>% 
+  ggplot(aes(x=value, y=Name, fill=MeanExhausted))+
+  geom_tile()+
+  scale_fill_gradientn(name="Expression", colours = brewer.pal(5, "PRGn"), limits=c(0,0.17))+
+  geom_vline(xintercept = 1.5, color="black", size=0.25)+
+   geom_segment(data=data.frame(y=seq(1.5, 32.5,1)), inherit.aes = F, 
+               aes(y = y, yend = y, x=0.25, xend=2.8), color="white", size=0.25)+
+  geom_text(data = p.values, inherit.aes = F, aes(y=Name, x=2.8, label=round(p, 2)), size=2.25)+
+  ggtitle("CN loss")+
+    coord_cartesian(clip = "off")+
+  mytheme_1+
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        axis.text.x = element_text(angle=45, hjust=1, size=6.5),
+        axis.ticks = element_blank(),
+        axis.text.y = element_text(size=6.25, margin = unit(c(0,-0.15,0,0), units = "cm")),
+        axis.title = element_blank(),
+        panel.border = element_blank())+
+  labs(tag = "F")
+
+```
+
+### Structural variants
+```{r structural variants SF6}
+
+df_struct <- df_snvs_chapuy %>% 
+  filter(Description=="SV") %>% 
+  mutate(value=factor(value, levels = c("0", "3"), labels = c("wt", "mut")))%>% 
+   group_by(Name, value) %>%
+  dplyr::summarise(MeanExhausted=mean(Exhausted/Absolute)) 
+
+p.values <- df_snvs_chapuy %>% 
+  filter(Description=="SV") %>% 
+  mutate(Exhausted=Exhausted/Absolute) %>% 
+   mutate(value=factor(value, levels = c("0", "3"), labels = c("wt", "mut"))) %>% 
+  compare_means(formula = Exhausted ~ value, group.by = "Name", p.adjust.method = "BH") %>% 
+  filter(p<0.05) 
+
+p8 <- df_struct %>% 
+  ggplot(aes(x=value, y=Name, fill=MeanExhausted))+
+  geom_tile()+
+  scale_fill_gradientn(name="Expression", colours = brewer.pal(5, "PRGn"), limits=c(0,0.17))+
+  geom_vline(xintercept = 1.5, color="black", size=0.25)+
+  geom_segment(data=data.frame(y=seq(1.5, 7.5,1)), inherit.aes = F, 
+               aes(y = y, yend = y, x=0.25, xend=2.75), color="white", size=0.25)+
+  ggtitle("Structural variants")+
+  coord_cartesian(clip = "off")+
+  mytheme_1+
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        axis.text.x = element_text(angle=45, hjust=1, size=6.5),
+        axis.ticks = element_blank(),
+        axis.text.y = element_text(size=6.25, margin = unit(c(0,-0.15,0,0), units = "cm")),
+        plot.margin = unit(units = "cm", c(0,1.25,0,0)),
+        axis.title = element_blank(),
+        panel.border = element_blank())+
+  labs(tag = "G")
+
+```
+
+
+### Part 2
+```{r assemble plot SF6 part 2, fig.height=7}
+
+p5+wrap_plots(p6/p8+plot_layout(heights = c(2,0.5)))+(p7/plot_spacer()+plot_layout(heights = c(2,0.5)))+
+  plot_layout(nrow = 1, widths = c(2.9,1,1))
+
+#ggsave(width = 19, height = 14, units = "cm", filename = "SF6_p2.pdf")
+
+```
+
+### Part 3 (Legend)
+```{r assemble plot SF6 part 3, fig.height=1}
+
+as_ggplot(get_legend(p8+guides(fill=guide_colorbar(nrow = 2, title = "Exhausted\nT-cells"))+
+                       theme(legend.position = "right",
+                             legend.key.height = unit(units = "cm", 0.3),
+                             legend.key.width = unit(units = "cm", 0.3))))
+
+#ggsave(width = 2, height = 2.4, units = "cm", filename = "SF6_legend.pdf")
+
+```
+
+# Supplementary Figure 7
+Panel A was generated using FlowJo. 
+
+## Flow cytometry: IKZF3
+```{r, fig.height=3}
+
+med <- df_ikzf3 %>% filter(Entity=="rLN") %>% pull(`FoxP3+/IKZF3+`) %>% median()
+
+pvalues <- df_ikzf3 %>% rename(IKZF3=`FoxP3+/IKZF3+`) %>% 
+  data.frame() %>% 
+  compare_means(data=., formula = IKZF3 ~ Entity, ref.group = "rLN") %>% 
+  select(Entity=group2, p) %>% 
+  filter(p<0.05) %>% 
+  mutate(p=round(p,3)) %>% 
+  mutate(p = ifelse(p < 0.01, "< 0.01", as.character(p)))
+
+nrow(df_ikzf3)
+
+plot_aiolos <- df_ikzf3 %>% 
+  ggplot(aes(x=Entity,y=`FoxP3+/IKZF3+`))+
+  geom_hline(yintercept = med, size=0.25, linetype="dashed", color="grey60")+
+  geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
+  ggbeeswarm::geom_beeswarm(size=0.75, shape=21, stroke=0.25, cex = 2.25, aes(fill=Entity))+
+  geom_text(inherit.aes = F, data = pvalues %>% mutate(Y=c(75, 75)),
+            aes(x=Entity, y=Y, label=p), size=2.25, check_overlap = T)+
+  scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
+  scale_y_continuous(limits = c(0,80), name=expression('% IKZF3'^'+'~'of FoxP3'^'+'))+
+  scale_x_discrete(limits=c("rLN", "DLBCL", "MCL", "FL", "MZL"))+
+  ggtitle("Flow cytometry")+
+  mytheme_1+
+  theme(legend.position = "none",
+        strip.background = element_rect(color=NA),
+        axis.title.x = element_blank(),
+        plot.title = element_text(face = "plain", size=6),
+        panel.border = element_rect(size=0.5),
+        axis.text.x = element_text(angle=45, hjust = 1, size=6),
+        axis.text.y = element_text(size=6),
+        axis.title.y = element_text(size=6),
+        panel.background = element_rect(fill=NA),
+        plot.margin = unit(c(0,0.25,0,0.25), "cm"))
+
+plot_spacer()+plot_aiolos+plot_layout(widths = c(3,1))
+
+#ggsave(width = 19, height = 5.7, units = "cm", filename = "SF7.pdf")
+
+```
+
+## Treg clonotypes
+```{r treg clonotypes SF7, fig.height=3}
+
+df_clonotypes_shared <- 
+  left_join(DFtotal_5prime %>% filter(!is.na(raw_clonotype_id)) %>% 
+            select(Barcode_fulla=Barcode_full, PatientID, refUMAP_1a=refUMAP_1, refUMAP_2a=refUMAP_2, IdentIa=IdentI, raw_clonotype_id) %>% distinct(),
+          DFtotal_5prime %>% filter(!is.na(raw_clonotype_id)) %>% 
+            select(Barcode_fullb=Barcode_full, PatientID, refUMAP_1b=refUMAP_1, refUMAP_2b=refUMAP_2, IdentIb=IdentI, raw_clonotype_id) %>% distinct()
+          ) %>% 
+  filter(Barcode_fulla!=Barcode_fullb) %>% 
+  filter(IdentIa!=IdentIb)
+
+treg_shared <- list()
+for(i in c(8,13,15)){
+
+df_subset <- 
+  df_clonotypes_shared %>% 
+  add_entity() %>% 
+  filter(IdentIb==i) 
+
+treg_shared[[i]] <- ggplot()+
+  geom_point_rast(data=DFtotal_5prime,
+                  aes(x=refUMAP_1, y=refUMAP_2, fill=IdentI), size=0.25, 
+                  alpha=ifelse(DFtotal_5prime$IdentI==i, 0.4, 0.04), stroke=0, shape=21)+
+  geom_curve(data= df_subset, 
+             aes(x=refUMAP_1a, y=refUMAP_2a, xend=refUMAP_1b, yend=refUMAP_2b, color=IdentIa,
+                 group=paste(raw_clonotype_id, PatientID)), curvature = -0.4, size=0.15, alpha=0.4)+
+  scale_color_manual(values = colors_umap_cl, limits=factor(cluster_order),
+                    labels=unlist(labels_cl), guide="none")+
+  scale_fill_manual(values = colors_umap_cl, limits=factor(cluster_order), guide="none",
+                    labels=unlist(labels_cl))+
+  guides(fill=guide_legend(nrow = 7, byrow = F, override.aes = list(size=1.75, stroke=0, shape=21, alpha=1, color="white")))+
+  coord_cartesian(clip = "off")+
+  xlab("refUMAP-1")+
+  ylab("refUMAP-2")+
+  mytheme_1+
+  theme(legend.position = "right",
+        panel.border = element_rect(size=0.25),
+        plot.title = element_textbox_simple(size=6, width = NULL, face = "plain",
+                                            padding = margin(1.25, 0, 1, 0),
+                                            lineheight = 1.25,
+                                            halign=0.5),
+        legend.text = element_text(size=6),
+        legend.spacing.x = unit("cm", x = 0.13),
+        axis.title.x = element_text(size=6),
+        axis.title.y = element_text(size=6),
+        axis.text = element_text(size=6),
+        legend.spacing.y = unit("cm", x = 0.001),
+        legend.key.width = unit("cm", x = 0.05),
+        legend.key.height = unit("cm", x = 0.5),
+        legend.box.margin = margin(unit = "cm",c(0,-0.35,0,-1)),
+        legend.title = element_blank())
+
+if(i==8)
+  treg_shared[[i]] <- treg_shared[[i]]+
+  labs(title="Paired clonotypes of <span style='color:#C6DBEF'>T<sub>REG</sub> CM<sub>1</sub></span>",
+       tag = "C")
+  
+if(i==13)
+ treg_shared[[i]] <- treg_shared[[i]]+
+ labs(title="Paired clonotypes of <span style='color:#6BAED6'>T<sub>REG</sub> CM<sub>2</sub></span>")+
+  theme(axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank())
+
+if(i==15)
+ treg_shared[[i]] <- treg_shared[[i]]+
+ labs(title="Paired clonotypes of <span style='color:#2171B5'>T<sub>REG</sub> EM<sub>1</sub></span>")+
+    theme(axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank())
+  
+}
+
+plot_treg <- treg_shared[[8]]+treg_shared[[13]]+treg_shared[[15]]+plot_layout(guides = "collect")
+#plot_treg
+```
+
+## Survival analysis
+```{r survival plots}
+
+kmplot_tfh <- readRDS("data/SurvPlot_Tfh_Gallium.rds")
+kmplot_tfh$plot$plot_env$legend <- c(0.32, 0.2)
+kmplot_tfh$plot$theme$legend.position <- c(0.32, 0.2)
+kmplot_tfh$plot$theme$legend.background$fill <- NA
+kmplot_tfh$plot$theme$legend.text$colour <- NA
+kmplot_tfh$plot <- kmplot_tfh$plot+annotation_custom(grob = textGrob(label = expression('T'[FH]~'High'), gp = gpar(cex=0.5), x=0.36, y=0.215))+
+  annotation_custom(grob = textGrob(label = expression('T'[FH]~'Low'), gp = gpar(cex=0.5), x=0.36, y=0.125))+
+  labs(tag = "D")
+
+kmplot_treg <- readRDS("data/SurvPlot_TregEff2_Gallium.rds")
+kmplot_treg$plot$plot_env$legend <- c(0.32, 0.2)
+kmplot_treg$plot$theme$legend.position <- c(0.32, 0.2)
+kmplot_treg$plot$theme$legend.background$fill <- NA
+kmplot_treg$plot$theme$legend.text$colour <- NA
+kmplot_treg$plot <- kmplot_treg$plot+annotation_custom(grob = textGrob(label = expression('T'[REG]~'EM'[2]~'High'), gp = gpar(cex=0.5), x=0.36, y=0.215))+
+  annotation_custom(grob = textGrob(label = expression('T'[REG]~'EM'[2]~'Low'), gp = gpar(cex=0.5), x=0.36, y=0.125))+
+  labs(tag = "E")
+
+
+```
+
+## Assemble plot
+```{r}
+
+plot_treg/
+  wrap_plots(kmplot_tfh$plot+kmplot_treg$plot+plot_spacer())+
+  plot_layout(heights = c(1.2,1))
+
+#ggsave(width = 19, height = 11, units = "cm", filename = "SF7.pdf")
+
+```
+
+# Supplementary Figure 8
+## Dendrogram T-cells
+```{r dendrogram}
+
+# Create data frame
+data <- data.frame(
+  level1="_Tcells",
+  level2=c("_'T'[Pr]",
+           rep("_'T'[H]",2),  
+           "_'T'[FH]", 
+           rep("_'T'[REG]",1),  
+           rep("_'T'[TOX]",3)),
+  level3=c("_'T'[Pr]", 
+           "TH_'CD4'^'+'*' Naive'",
+           "TH_'non-Naive (CM'[1]*' + CM'[2]*')'", 
+           "_'T'[FH]",  
+           "_'T'[REG]",
+           "TTOX_'CD8'^'+'*' Naive'",
+           "TTOX_'non-Naive (EM'[1]*' + EM'[2]*')'", 
+           "TTOX_'   Exhausted (EM'[3]*')'")
+)
+
+# Data handling
+edges_level1_2 <- data %>% select(level1, level2) %>% unique %>% rename(from=level1, to=level2)
+edges_level2_3 <- data %>% select(level2, level3) %>% unique %>% rename(from=level2, to=level3)
+edge_list=rbind(edges_level1_2, edges_level2_3)
+vert <- data.frame(
+  name=unique(c(data$level1, data$level2, data$level3))) %>% 
+  mutate(cluster=as.character(c(NA, 14, 'TH', 6, 'TREG', "TTOX", 1, 2, 12, 3, 5))) %>% 
+  mutate(label=strsplit(name, split = "_") %>% sapply(., "[[", 2))
+
+# Make ggraph object
+mygraph_codex <- graph_from_data_frame( edge_list ,vertices = vert)
+
+# Small codex dendrogramm
+ggraph(mygraph_codex, layout = 'tree', circular = FALSE) + 
+  geom_edge_diagonal(strength = 1.4, edge_width=0.25)+
+  geom_node_label(aes(label=label), 
+                  parse = T, nudge_y=0.11, label.padding =  unit(units = "cm", 0.12),
+                  size=2.35, alpha=1, 
+                  fill=c(rep("white", 4), "black", rep("white", 6)), vjust=1, color=NA,
+                  label.size = 0, label.r = unit(units = "cm", 0))+
+  geom_node_text(aes(label=label, color=cluster), 
+                 vjust=1, nudge_y=0.05, 
+                 parse = T, 
+                 alpha=c(0,rep(1,5),rep(0,5)),
+                 size=2.35)+
+  scale_color_manual(values = colors_dendrogramm_codex)+
+  coord_cartesian(clip = "off")+
+  ggtitle("T-cell subsets \nidentified by mIF")+
+  theme_void()+
+  theme(legend.position = "none")+
+  theme(plot.margin = unit(c(-0.5,0.35,0.25,0.25), units = "cm"),
+        plot.title = element_text(hjust = 0.4, vjust=-7.5, size=7))
+
+#ggsave(filename = "Figure7_p2.pdf", width = 13, height = 4.25, units = "cm")
+
+```
+
+## Handle data
+```{r handle data SF8}
+  
+# Read CODEX expression data
+# Available at BioStudies database (https://www.ebi.ac.uk/biostudies/) under accession number S-BIAD565
+codex_expression <- data.table::fread("data/cells_expression.csv") %>% tibble() %>% 
+  rename(unique_cell_id=V1)
+
+proteins_selected <- c("PAX5", "CD20", "CD79a", "CD21", "PDPN", "CD38", "MCT",  "GRZB", "CD56", "CD163", "CD206", "CD11c",
+                       "CD15", "CD34", "CD31", "CD90", "Ki67", "PD1", "CXCR5", "ICOS", "CD69", "CD45RO", "TIM3", "LAG3",
+                       "CD57", "CD8", "CD45RA", "FOXP3", "CD4",  "CD3")
+
+codex_meanExp <- codex_expression %>% 
+  left_join(., codex_annotation %>% select(unique_cell_id, Merged_final)) %>% 
+  filter(!is.na(Merged_final)) %>% 
+  select(-unique_cell_id) %>% 
+  group_by(Merged_final) %>% 
+  summarise_all(mean) %>% 
+  pivot_longer(cols = 2:ncol(.), names_to = "Protein", values_to = "Expression") %>% 
+  group_by(Protein) %>% 
+  mutate(Expression=(Expression-min(Expression))/(max(Expression)-min(Expression))) %>% 
+  filter(Protein %in% proteins_selected)
+
+```
+
+## Makers and cell types
+```{r plot markers SF8}
+
+p2 <- codex_meanExp %>% 
+  ggplot(aes(x=Protein, y=Merged_final, fill=Expression))+
+  geom_tile()+
+  scale_fill_gradientn(name="Expression", colours = brewer.pal(5, "GnBu"), limits=c(0,1), breaks=c(0,0.5,1))+
+  geom_hline(yintercept = seq(1.5, 17.5, 1), size=0.25, color="white")+
+  geom_vline(xintercept = seq(1.5, 32.5, 1), size=0.25, color="white")+
+  scale_x_discrete( expand = c(0,0), limits=c(proteins_selected))+
+  scale_y_discrete(expand = c(0,0), limits=c("B", "FDC", "PC", "MC", "NK", "NKT",  "Macro", "DC", "Granulo", "Stromal cells",
+                                             "TPR", "TFH",  "TTOX_exh", "TTOX", "TTOXNaive",   "Treg",  "CD4T", "CD4TNaive"),
+                   labels=unlist(list("B-cells", "FDC", "Plasma cells", "Mast cells", "NK cells", "NK T-cells", "Macrophages", "Dendritic cells", "Granulocytes",
+                                      "Stromal cells", labels_codex$TPR, labels_codex$TFH, labels_codex$TTOX_exh, labels_codex$TTOX, labels_codex$TTOXNaive, 
+                                      labels_codex$Treg, labels_codex$CD4T, labels_codex$CD4TNaive)))+
+  guides(fill=guide_colorbar(ticks.colour = "black"))+
+  theme_bw()+
+  mytheme_1+
+   theme(axis.title = element_blank(),
+         legend.position = "top",
+         axis.text.y = element_text(size=7),
+         legend.text = element_text(size = 7, color="black"),
+         legend.title = element_text(size = 7, color="black", vjust = 0.8, margin = unit(units = "cm", c(0,0.2,0,0))),
+         legend.key.height = unit(0.25, "cm"),
+         plot.margin = unit(c(0,0,0,0), units = "cm"),
+         legend.key.width = unit(0.2, "cm"),
+         legend.box.spacing = unit(0.1, "cm"),
+         legend.box.margin = unit(c(0,0,0,0), units = "cm"),
+         plot.title = element_text(face = "plain", vjust = -1),
+         plot.tag = element_text(margin = unit(c(0,-0.5,-0.25,0), units = "cm")),
+         axis.text.x = element_text(size=6.5, angle = 45, hjust = 1))+
+  labs(tag = "C")
+
+```
+
+## T-cell numbers in codex
+```{r T-cell numbers SF8}
+
+df_codex_no <- 
+  codex_annotation %>% 
+  filter(Merged_final %in% c("TTOXNaive", "TTOX_exh", "TTOX", "Treg", "TPR", "TFH", "CD4T", "CDT4Naive")) %>% 
+  count(PatientID, Merged_final, unique_region) %>% 
+  group_by(PatientID) %>% 
+  mutate(Sum=sum(n)) %>% 
+  ungroup() %>% 
+  mutate(No=dense_rank(desc(Sum)))
+
+regions_random <- df_codex_no %>% 
+  select(PatientID, unique_region) %>% 
+  distinct() %>% 
+  group_by(PatientID) %>% 
+  sample_n(1)
+
+p3 <- ggplot()+
+  geom_hline(yintercept = 47280, size=0.25, linetype="dashed")+
+  geom_bar(data=df_codex_no %>% filter(unique_region %in% regions_random$unique_region), 
+           aes(x=No-0.15, y=n, fill=Merged_final), color="white",
+           stat = "identity",  width=0.2, size=0.25, alpha=0.7)+
+  geom_bar(data=df_codex_no %>% filter(!unique_region %in% regions_random$unique_region), 
+           aes(x=No+0.15, y=n, fill=Merged_final), color="white",
+           stat = "identity",  width=0.25, size=0.25, alpha=0.7)+
+  scale_y_continuous(name = "Absolute number of cells - mIF", limits = c(0, 100000))+
+ scale_fill_manual(values = colors_codex[c(2:9)],
+                   limits=limits_codex[c(2:9)],
+                   labels=labels_codex[c(2:9)],
+                   name=NULL)+
+  guides(fill=guide_legend(nrow = 2, default.unit = "cm", override.aes = list(color="white"), 
+                           keywidth = 0.3, keyheight = 0.3, byrow = T))+
+  scale_x_continuous(name="Patients", 
+                     breaks=unique(df_codex_no$No), 
+                     labels=unique(df_codex_no$PatientID), 
+                     expand = c(0.02,0.02))+
+  mytheme_1+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.margin = unit(c(0,0,0,0), units = "cm"),
+        legend.box.margin = unit(c(0,0,-0.3,0), units = "cm"),
+        axis.title.y = element_text(size=7, vjust = -15),
+        axis.title.x = element_blank(),
+        legend.spacing.y = unit(0.15, units = "cm"),
+        plot.tag = element_text(margin = unit(c(0,-0.5,0,0), units = "cm")),
+        legend.position = "top")+
+  labs(tag = "D")
+
+```
+
+## Correlations
+```{r correlations SF8}
+
+freq_codex <- 
+  codex_annotation %>% 
+  filter(Merged_final %in% c("TTOXNaive", "TTOX_exh", "TTOX", "Treg", "TPR", "TFH", "CD4T", "CD4TNaive")) %>% 
+  filter(!unique_region %in% c("191_1reg004", "191_4reg004", "191_4reg005", "191_1reg006")) %>% 
+  add_prop(vars = c("Merged_final", "PatientID"), group.vars = 2) %>% 
+  rename(Prop_codex=Prop, IdentI=Merged_final) 
+
+freq_citeseq <- 
+  Combined_T@meta.data %>% 
+  add_prop(vars = c("IdentI", "PatientID"), group.vars = 2) %>% 
+  mutate(IdentII=case_when(IdentI==1 ~ "CD4TNaive",
+                           IdentI %in% c(2,9) ~ "CD4T",
+                           IdentI==14 ~ "TPR",
+                           IdentI==6 ~ "TFH",
+                           IdentI %in% c(8,11,13,15) ~ "Treg",
+                           IdentI==12 ~ "TTOXNaive",
+                           IdentI %in% c(3,16) ~ "TTOX",
+                           IdentI %in% c(5) ~ "TTOX_exh")) %>% 
+  group_by(IdentII, PatientID) %>% 
+  summarise(Prop=sum(Prop)) %>% 
+  rename(Prop_citeseq=Prop, IdentI=IdentII) %>% 
+  fill_zeros(names_from = "IdentI", values_from = "Prop_citeseq")
+
+freq_joined <- left_join(freq_codex, freq_citeseq) %>% 
+  mutate(Prop_codex=100*Prop_codex, Prop_citeseq=100*Prop_citeseq)
+
+this_theme <- 
+  theme_bw()+
+  mytheme_1+
+  theme(plot.margin = unit(c(0,0.2,0.2,0.35), units = "cm"),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_textbox_simple(face = "plain", halign=0.5, width = 2, padding = margin(0, 0, 0, 0)),
+        plot.tag = element_text(margin = unit(c(0,-0.5,0,0), units = "cm")),
+        axis.text = element_text(size=7, color="black"))
+
+cor_plots_codex <- list()
+
+cor_plots_codex[["TFH"]] <- 
+  freq_joined %>% 
+  filter(IdentI=="TFH") %>% 
+  ggplot(aes(x=Prop_codex, y=Prop_citeseq))+
+  geom_point(fill=colors_codex[["TFH"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_codex[["TFH"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,40), breaks = c(0, 12, 24, 36), name = "mIF")+
+  scale_y_continuous(limits = c(0,40), breaks = c(0, 12, 24, 36), name = "CITE-seq")+
+  labs(title="T<sub>FH</sub>")+
+  coord_fixed()+
+  this_theme+
+  theme(plot.margin = unit(c(0,0,0.2,0), units = "cm"))
+
+cor_plots_codex[["TREG"]] <- 
+  freq_joined %>% 
+  filter(IdentI=="Treg") %>% 
+  ggplot(aes(x=Prop_codex, y=Prop_citeseq))+
+  geom_point(fill=colors_codex[["Treg"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color="black", se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,56), breaks = c(0, 16, 32, 48), name = "mIF")+
+  scale_y_continuous(limits = c(0,56), breaks = c(0, 16, 32, 48), name = "CITE-seq")+
+  labs(title="T<sub>REG</sub>")+
+  coord_fixed()+
+  this_theme+
+  theme(axis.title.y = element_text(size=7, angle = 90, vjust = 2.5))
+
+cor_plots_codex[["TTOXNaive"]] <- 
+  freq_joined %>% 
+  filter(IdentI=="TTOXNaive") %>% 
+  ggplot(aes(x=Prop_codex, y=Prop_citeseq))+
+  geom_point(fill=colors_codex[["TTOXNaive"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_codex[["TTOXNaive"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,13), breaks = c(0, 4, 8, 12), name = "mIF")+
+  scale_y_continuous(limits = c(0,13), breaks = c(0, 4, 8, 12), name = "CITE-seq")+
+  labs(title="CD8<sup>+</sup> Naive")+
+  coord_fixed()+
+  this_theme+
+  theme(plot.margin = unit(c(0,0,0.2,0), units = "cm"))
+
+cor_plots_codex[["THNaive"]] <- 
+  freq_joined %>% 
+  filter(IdentI=="CD4TNaive") %>% 
+  ggplot(aes(x=Prop_codex, y=Prop_citeseq))+
+  geom_point(fill=colors_codex[["CD4TNaive"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_codex[["CD4TNaive"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,30), breaks = c(0, 10, 20, 30), name = "mIF")+
+  scale_y_continuous(limits = c(0,30), breaks = c(0, 10, 20, 30), name = "CITE-seq")+
+  labs(title="CD4<sup>+</sup> Naive")+
+  coord_fixed()+
+  this_theme+
+  theme(plot.title = element_textbox_simple(face = "plain", halign=0.5, margin = unit(units = "cm", c(0,0,-1.75,0)), 
+                                            width = 2, padding = margin(0, 0, 0, 0)),
+        plot.margin = unit(c(0,0,0.2,0), units = "cm"))
+
+cor_plots_codex[["TPR"]] <- 
+  freq_joined %>% 
+  filter(IdentI=="TPR") %>% 
+  ggplot(aes(x=Prop_codex, y=Prop_citeseq))+
+  geom_point(fill=colors_codex[["TPR"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_codex[["TPR"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.93))+
+  scale_x_continuous(limits = c(0,13), breaks = c(0, 4, 8, 12), name = "mIF")+
+  scale_y_continuous(limits = c(0,13), breaks = c(0, 4, 8, 12), name = "CITE-seq")+
+  labs(title="T<sub>Pr</sub>")+
+  coord_fixed()+
+  this_theme+
+  theme(axis.title.y = element_text(size=7, angle = 90, vjust = 2.5),
+        plot.title = element_textbox_simple(face = "plain", halign=0.5, margin = unit(units = "cm", c(0,0,-1.75,0)), 
+                                            width = 2, padding = margin(0, 0, 0, 0)),
+        plot.tag = element_text(margin = unit(c(0,0,-0.25,0), units = "cm")))
+
+cor_plots_codex[["TH"]] <- 
+  freq_joined %>% 
+  filter(IdentI=="CD4T") %>% 
+  ggplot(aes(x=Prop_codex, y=Prop_citeseq))+
+  geom_point(fill=colors_codex[["CD4T"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_codex[["CD4T"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.93))+
+  scale_x_continuous(limits = c(0,60), breaks = c(0, 20, 40, 60), name = "mIF")+
+  scale_y_continuous(limits = c(0,60), breaks = c(0, 20, 40, 60), name = "CITE-seq")+
+  labs(title="Memory T<sub>H</sub>")+
+  coord_fixed()+
+  this_theme+
+  theme(axis.title.y = element_text(size=7, angle = 90, vjust = 2.5))
+
+cor_plots_codex[["TTOX"]] <- 
+  freq_joined %>% 
+  filter(IdentI=="TTOX") %>% 
+  ggplot(aes(x=Prop_codex, y=Prop_citeseq))+
+  geom_point(fill=colors_codex[["TTOX"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_codex[["TTOX"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45), name = "mIF")+
+  scale_y_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45), name = "CITE-seq")+
+  labs(title="Memory T<sub>TOX</sub>")+
+  coord_fixed()+
+  this_theme+
+  theme(axis.title.y = element_text(size=7, angle = 90, vjust = 2.5),
+        axis.title.x = element_text(size=7))
+
+cor_plots_codex[["TTOX_exh"]] <- 
+  freq_joined %>% 
+  filter(IdentI=="TTOX_exh") %>% 
+  ggplot(aes(x=Prop_codex, y=Prop_citeseq))+
+  geom_point(fill=colors_codex[["TTOX_exh"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
+  geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
+              color=colors_codex[["TTOX_exh"]], se=F, fullrange=T)+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  scale_x_continuous(limits = c(0,65), breaks = c(0, 20, 40, 60), name = "mIF")+
+  scale_y_continuous(limits = c(0,65), breaks = c(0, 20, 40, 60), name = "CITE-seq")+
+  labs(title="PD1<sup>+</sup> TIM3<sup>+</sup> T<sub>TOX</sub>")+
+  coord_fixed()+
+  this_theme+
+  theme(axis.title.x = element_text(size=7),
+        plot.margin = unit(c(0,0,0.2,0), units = "cm"))
+
+freq_joined %>% 
+  group_by(IdentI) %>% 
+  summarise(R=cor.test(Prop_codex, Prop_citeseq)$estimate) %>% pull(R) %>% median()
+
+```
+
+## Assemble plot
+```{r assemble SF8, fig.height=5.5}
+
+p_full <- wrap_plots(p2/p3+plot_layout(heights = c(1.25,1)))+wrap_plots(cor_plots_codex$TPR+labs(tag = "E")+cor_plots_codex$THNaive+cor_plots_codex$TH+cor_plots_codex$TFH+
+  cor_plots_codex$TREG+cor_plots_codex$TTOXNaive+cor_plots_codex$TTOX+cor_plots_codex$TTOX_exh+
+  plot_layout(ncol = 2))+
+  plot_layout(widths = c(2.25,1.15))
+p_full
+#ggsave(p_full, width = 19, height = 14, units = "cm", filename = "SF3.pdf")
+
+
+```
+
+# Supplementary Figure 9
+## Immunofluorescence images
+```{r images SF9, fig.height=3}
+
+plots_codex <- list()
+
+for(r in c("191_3reg008", "191_4reg004", "191_2reg007", "191_5reg002", "191_1reg003", "empty")) {
+  
+  df_tmp <- codex_annotation %>% filter(unique_region== r) %>% 
+    mutate(Merged_all_simple=ifelse(Merged_final %in% c("Granulo", "Macro", "DC"), "Myeloid", Merged_final)) %>% 
+    mutate(Merged_all_simple=ifelse(Merged_all_simple %in% c("MC", "NKT", "PC", "NK"), "Other", Merged_all_simple)) %>% 
+    filter(((x-mean(.$x))^2+(y-mean(.$y))^2)<2500^2) 
+  
+  plots_codex[[r]] <- ggplot()+
+    geom_point_rast(data=df_tmp %>% filter(Merged_all_simple=="B"), aes(x=x,y=y), shape=21, size=0.25, stroke=0, alpha=1, raster.dpi =300,
+                    color=colors_codex[["B"]], fill=colors_codex[["B"]])+
+    geom_point_rast(data=df_tmp %>% filter(Merged_all_simple!="B"), aes(x=x,y=y, fill=Merged_all_simple, color=Merged_all_simple), 
+                    shape=21, size=0.25, stroke=0, alpha=1, raster.dpi=300)+
+    scale_color_manual(values = colors_codex, limits=limits_codex, labels=labels_codex, name="Cell type")+
+    scale_fill_manual(values = colors_codex, limits=limits_codex, labels=labels_codex, name="Cell type")+
+    ggtitle(unique(df_tmp$Entity))+
+    coord_fixed()+
+    theme_void()+
+    theme(legend.position = "none",
+          plot.title = element_text(color="white", hjust=0.1, size=8, 
+                                    margin = unit(units = "cm", c(0,0,-0.6,0)), face = "bold"),
+          plot.margin = unit(units = "cm", c(0.1, 0.1, 0.1, 0.1)),
+          panel.background = element_rect(fill = "black", color="black"))
+}
+
+plots_codex
+
+#ggsave(wrap_plots(plots_codex), width = 19, height = 12.5, units = "cm", filename = "Figure7_p2.pdf")
+
+legend_plot_codex <- ggplot()+
+  geom_point_rast(data=df_tmp %>% filter(Merged_all_simple!="B"), aes(x=x,y=y, fill=Merged_all_simple, color=Merged_all_simple), 
+                  shape=21, size=0.25, stroke=0, alpha=0, raster.dpi=300)+
+  scale_color_manual(values = colors_codex, limits=limits_codex, labels=labels_codex, name="Cell type")+
+  scale_fill_manual(values = colors_codex, limits=limits_codex, labels=labels_codex, name="Cell type")+
+  guides(fill=guide_legend(ncol = 2, override.aes = list(size=1.75, stroke=0, shape=21, alpha=1, color=NA)))+
+  guides(color=guide_legend(ncol = 2))+
+  ggtitle("")+
+  coord_fixed()+
+  mytheme_codex+
+  theme(panel.background = element_rect(fill = "black", color="black"),
+        legend.position = "right",
+        legend.text = element_text(size=6, color="white"),
+        legend.box.background = element_rect(fill = "black", color="black"),
+        legend.spacing.x = unit("cm", x = 0.13),
+        legend.spacing.y = unit("cm", x = 0.001),
+        legend.key.width = unit("cm", x = 0.05),
+        legend.key.height = unit("cm", x = 0.5),
+        legend.title = element_blank())
+
+as_ggplot(get_legend(legend_plot_codex))
+#ggsave(width = 4, height = 4, units = "cm", filename = "Figure7_p2_legend.pdf")
+
+```
+
+# Supplementary Figure 10
+## Load analysis
+```{r run analysis SF10}
+
+# Read results from neighborhood analysis
+# Please run file: analysis/NeighborhoodAnalysis.Rmd
+load("output/Neighborhood_results.RData")
+
+# Add codex annotation
+codex_annotation <- left_join(codex_annotation, nn_classes, by="unique_cell_id")
+codex_annotation
+
+```
+
+## Tissue cores
+### Images
+```{r plots SF10, fig.height=6}
+
+regions <- codex_annotation %>% pull(unique_region) %>% unique()
+plots <- list()
+df <- list()
+for(r in regions){
+  
+df[[r]] <- codex_annotation %>% 
+  filter(!is.na(Region), unique_region %in% r) %>% 
+  filter(x>500, x<7500) %>% 
+  filter(y>500, y<7500) %>% 
+  filter(((x-mean(.$x))^2+(y-mean(.$y))^2)<2500^2)
+  
+plots[[r]] <- df[[r]] %>% 
+  ggplot()+
+  ggrastr::geom_point_rast(aes(x=x,y=y,color=Region, fill=Region), shape=21, size=0.25, stroke=0, alpha=1, raster.dpi =400)+
+  scale_color_manual(values = colors_nn)+
+  scale_fill_manual(values = colors_nn)+
+  guides(color=guide_legend(override.aes = list(size=3)))+
+  ggtitle(unique(df[[r]]$PatientID))+
+  coord_fixed(clip = "off")+
+  theme_void()+
+  theme(legend.position = "none",
+        plot.margin = unit(units = "cm", c(0.1,0.1,0.1,0.1)),
+        plot.subtitle = element_text(size=7, face = "bold", hjust=0.5, margin = unit(units = "cm", c(0,0,0,0))),
+        plot.title = element_text(size=6.5, face = "plain", margin = unit(units = "cm", c(-0.1,0,-0.6,-0.1))),
+        panel.background = element_rect(fill = NA, color = NA),
+        plot.background = element_rect(fill = NA, color = NA))
+
+}
+
+empty <- codex_annotation %>% 
+  filter(!is.na(Region), unique_region %in% "empty") %>% 
+  ggplot()+
+  ggrastr::geom_point_rast(aes(x=x,y=y,color=Region, fill=Region), alpha=0, raster.dpi =400)+
+  guides(color=guide_legend(override.aes = list(size=3, alpha=1)))+
+  ggtitle("")+
+  coord_fixed(clip = "off")+
+  theme_void()+
+  theme(legend.position = "right",
+        plot.margin = unit(units = "cm", c(0.1,0.1,0.1,0.1)),
+        plot.title = element_text(size=8, face = "plain", margin = unit(units = "cm", c(0,0,-0.75,0))),
+        panel.background = element_rect(fill = NA, color = NA),
+        plot.background = element_rect(fill = NA, color = NA))
+
+
+p_full <- 
+  wrap_plots(plots$`191_1reg006`+labs(tag = "A", subtitle = "rLN")+
+               plots$`191_3reg007`+
+               plots$`191_5reg005`+plot_layout(ncol = 1))+
+  
+  wrap_plots(plots$`191_4reg004`+labs(tag = "B",  subtitle = "DLBCL")+#
+               plots$`191_3reg001`+
+               plots$`191_4reg006`+plot_layout(ncol = 1))+
+  
+  wrap_plots(plots$`191_2reg007`+labs(tag = "C",  subtitle = "MCL")+
+               plots$`191_2reg002`+
+               plots$`191_3reg006`+plot_layout(ncol = 1))+
+  
+  wrap_plots(plots$`191_5reg002`+labs(tag = "D",  subtitle = "FL")+
+               plots$`191_3reg002`+
+               plots$`191_5reg001`+plot_layout(ncol = 1))+
+  
+  wrap_plots(plots$`191_1reg003`+labs(tag = "E",  subtitle = "MZL")+
+               plots$`191_1reg004`+
+               empty+plot_layout(ncol = 1))+
+  plot_layout(ncol = 5)
+
+p_full
+
+#ggsave(p_full, width = 19, height = 11.5, units = "cm", filename = "SF10.pdf")
+
+```
+
+### Legend
+```{r legend SF8, fig.height=1}
+
+labels_nn <- c(
+  "N1: B-cells / FDC" ,
+  'N2: B-cells / FDC / T'[FH]~'',
+  'N3: T'[Pr]~'/ T'[REG]~'',
+  'N4: Macrophages / B-cells / Exh. T'[TOX]~'',
+  "N5: B-cells",
+  "N6: T-cell area I" ,
+  "N7: T-cell area II" ,
+  'N8: PC / NK / Memory T'[TOX]~'' ,
+  "N9: T-cell area III" ,
+  "N10: Stromal cells / Macrophages"
+   )
+
+p_legend <- codex_annotation %>% 
+  filter(!is.na(Region), unique_region %in% r) %>% 
+  ggplot()+
+  ggrastr::geom_point_rast(aes(x=x,y=y,color=Region, fill=Region), shape=21, size=0.25, 
+                           stroke=0, alpha=1, raster.dpi =400)+
+  scale_color_manual(values = colors_nn, limits=factor(1:10), labels=labels_nn)+
+  scale_fill_manual(values = colors_nn, limits=factor(1:10), labels=labels_nn)+
+  guides(color=guide_legend(nrow = 2, override.aes = list(size=2, color="black", stroke=0.25)))+
+  ggtitle(unique(df[[r]]$PatientID))+
+  coord_fixed(clip = "off")+
+  theme_void()+
+  theme(legend.position = "right",
+        plot.margin = unit(units = "cm", c(0.1,0.1,0.1,0.1)),
+        legend.text = element_text(size=6.5),
+        legend.title = element_text(size=7, face = "bold"),
+        plot.subtitle = element_text(size=7, face = "bold", hjust=0.5, margin = unit(units = "cm", c(0,0,0,0))),
+        plot.title = element_text(size=6.5, face = "plain", margin = unit(units = "cm", c(-0.1,0,-0.6,-0.1))),
+        panel.background = element_rect(fill = NA, color = NA),
+        plot.background = element_rect(fill = NA, color = NA),
+        legend.box.margin = unit(c(0,0,0,-0.38), "cm"),
+        legend.key.width = unit("cm", x = 0.1),
+        legend.spacing.x = unit("cm", x = 0.1),
+        legend.key.height = unit("cm", x = 0.35))
+
+as_ggplot(get_legend(p_legend))
+
+#ggsave(width = 19, height = 1.5, units = "cm", filename = "SF10_legend.pdf")
+
+```
+
+## Composition of neighborhoods
+```{r neighborhood composition, fig.height=3}
+
+df_freq_nh <- codex_annotation %>% 
+  add_prop(vars = c("Entity", "Region", "unique_region"), group.vars = 3) %>% 
+  fill_zeros(names_from = "Region", values_from = "Prop") %>%
+  group_by(Entity, Region) %>% 
+  mutate(Max=0.06+max(Prop),
+         Region_label=paste0("N", Region)) %>% 
+  mutate(Region_label=factor(Region_label, levels = paste0("N", 1:10))) %>% 
+  ungroup()
+
+pvalues <- df_freq_nh %>% 
+  compare_means(data=., formula = Prop ~ Entity, ref.group = "rLN", 
+                group.by = "Region_label", p.adjust.method = "BH") %>% 
+  filter(p.adj<0.05) %>% 
+  mutate(p.adj=round(p.adj, 2), Entity=group2) %>% 
+  mutate(p.adj=ifelse(p.adj==0, "< 0.01", as.character(p.adj))) %>% 
+  mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
+  left_join(., df_freq_nh %>% select(Region_label, Max, Entity) %>% distinct, by = c("Region_label", "Entity"))
+
+df_medianLines <- df_freq_nh %>% 
+  filter(Entity=="rLN") %>% 
+  group_by(Region_label) %>% 
+  dplyr::summarise(MedianProp=median(Prop)) 
+
+df_freq_nh %>% 
+  ggplot(aes(x=Entity, y=Prop)) +
+  geom_hline(data=df_medianLines, aes(yintercept=MedianProp),
+             size=0.25, linetype="dashed", color="grey60")+
+  geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
+  ggbeeswarm::geom_beeswarm(size=1, shape=21, stroke=0.1, cex = 2, aes(fill=Region))+
+  geom_text(data=pvalues, inherit.aes = F, aes(y=Max, x=Entity, label=p.adj), size=2.25)+
+  scale_fill_manual(values = colors_nn)+
+  scale_x_discrete(limits=c("rLN", "DLBCL", "MCL", "FL", "MZL"))+
+  facet_wrap(~Region_label, strip.position = "top", scales = "free_y", nrow = 2)+
+  scale_y_continuous(name = "% of total area", expand = c(0,0.075))+
+  mytheme_1+
+  theme(strip.text.y = element_text(angle = 0, size=6),
+        axis.text.x = element_text(angle=45, hjust=1),
+        axis.title.x = element_blank(),
+        strip.background = element_blank(),
+        plot.margin = unit(c(0,0,0,0.1), "cm"))+
+  labs(tag = "F")
+
+#ggsave(width = 19, height = 7, units = "cm", filename = "SF10.pdf")
+
+```
+
+# Session info
+```{r session}
+
+sessionInfo()
+
+```
