@@ -238,10 +238,10 @@ label5 <- paste0(100*round(nrow(df_subset %>% filter(IdentIa==5))/nrow(df_subset
 p5 <- ggplot()+
   geom_point_rast(data=DFtotal_5prime,
                   aes(x=refUMAP_1, y=refUMAP_2, fill=IdentI), size=0.25, 
-                  alpha=ifelse(DFtotal_5prime$IdentI==11, 0.75, 0.15), stroke=0, shape=21)+
+                  alpha=ifelse(DFtotal_5prime$IdentI==11, 0.75, 0.05), stroke=0, shape=21)+
   geom_curve(data= df_subset, 
              aes(x=refUMAP_1a, y=refUMAP_2a, xend=refUMAP_1b, yend=refUMAP_2b, color=IdentIa,
-                 group=paste(raw_clonotype_id, PatientID)), curvature = -0.4, size=0.15, alpha=0.4)+
+                 group=paste(raw_clonotype_id, PatientID)), curvature = -0.4, size=0.1, alpha=0.4)+
   geom_text(inherit.aes = F, aes(x=-0.75, y=8.5, label=label6), color=colors_umap_cl[["6"]], size=2.25)+
   geom_text(inherit.aes = F, aes(x=4.5, y=6.75, label=label14), color=colors_umap_cl[["14"]], size=2.25)+
   geom_text(inherit.aes = F, aes(x=8, y=1, label=label5), color=colors_umap_cl[["5"]], size=2.25)+

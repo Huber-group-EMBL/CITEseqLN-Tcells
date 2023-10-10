@@ -45,7 +45,7 @@ df_clonotypes <-
   group_by(PatientID, raw_clonotype_id, IdentI) %>% 
   summarise(refUMAP_1=median(refUMAP_1), refUMAP_2=median(refUMAP_2), n, Entity, .groups = "drop") %>% 
   distinct() %>% 
-  mutate(n=ifelse(n>50, 50, n)) %>% 
+  #mutate(n=ifelse(n>50, 50, n)) %>% 
   mutate(Entity=factor(Entity, levels=c("rLN", "DLBCL", "MCL", "FL", "MZL")))
   
 DF_5prime_umap <- DFtotal_5prime %>% 
@@ -53,14 +53,41 @@ DF_5prime_umap <- DFtotal_5prime %>%
   distinct() %>% 
   mutate(Entity=factor(Entity, levels=c("rLN", "DLBCL", "MCL", "FL", "MZL")))
 
+df_clonotypes_subset <- list()
+
+# Filter clonotypes to avoud overplotting
+w <- 30
+#for(e in entities){
+  for(i in c(3,5,6)){
+    for(p in unique(df_clonotypes$PatientID)){
+        tmp <- df_clonotypes %>% 
+          filter(n>2, IdentI==i, PatientID==p) 
+        
+        if(nrow(tmp)>w){
+          
+          df_clonotypes_subset[[paste0(i, p)]] <- tmp %>% sample_n(size = w)
+          
+          } else {
+            df_clonotypes_subset[[paste0(i, p)]] <- tmp
+          }
+        
+      }
+    }
+#  }
+rm(w,p)
+
+df_clonotypes_subset <- bind_rows(df_clonotypes_subset) %>% 
+  rbind(df_clonotypes %>% filter(n>2, !IdentI %in% c(3,5,6)),
+        .)
+
 p1 <- ggplot()+
   geom_point_rast(data=DF_5prime_umap %>% select(-Entity), aes(x=refUMAP_1, y=refUMAP_2), 
                   size=0.2, alpha=0.2, stroke=0, shape=21,  fill="grey90")+
   geom_point_rast(data=DF_5prime_umap, aes(x=refUMAP_1, y=refUMAP_2, fill=IdentI), size=0.2, 
-                  alpha=ifelse(DF_5prime_umap$Entity=="FL" & DF_5prime_umap$IdentI=="6", 0.05, 0.2), 
+                  alpha=ifelse(DF_5prime_umap$IdentI %in% c("6", "3", "5", "11", "14"), 0.04, 0.2), 
                   stroke=0, shape=21)+
-  geom_point(data=df_clonotypes %>% filter(n>2), aes(x=refUMAP_1, y=refUMAP_2, size=n, color=IdentI), shape=21, stroke=0.25,
-             alpha=ifelse(filter(df_clonotypes, n>2)$Entity %in% c("FL", "MZL"), 1, 0.75))+
+  geom_point(data=df_clonotypes_subset, aes(x=refUMAP_1, y=refUMAP_2, size=n, color=IdentI), shape=21, stroke=0.25,
+             alpha=ifelse(df_clonotypes_subset$Entity %in% c("FL", "MZL"), 1, 0.75))+
   scale_color_manual(values = colors_umap_cl, guide="none")+
   scale_fill_manual(values = colors_umap_cl, guide="none")+
   scale_size_continuous(range=c(1, 5), limits=c(3, 50), breaks=c(3, 20, 35, 50),
@@ -84,6 +111,84 @@ p1 <- ggplot()+
   labs(tag = "A")
 
 p1
+
+```
+
+# Quantification of clonotypes
+```{r quantify clonotypes, fig.height=2.5}
+
+df_clon_sign <- df_clonotypes %>% mutate(isClonal=ifelse(n>1, "clonal", "not")) %>% 
+  group_by(isClonal, PatientID, IdentI) %>% 
+  summarise(Total=sum(n)) %>% 
+  fill_zeros(names_from = "IdentI", values_from = "Total") %>% 
+  pivot_wider(names_from = "isClonal", values_from = "Total") %>% 
+  mutate(Prop=round(clonal/(not+clonal), 2)) %>% 
+  add_entity() %>% 
+  filter(IdentI %in% c("5", "3", "6", "11")) %>% 
+  mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
+  mutate(Prop=ifelse(is.nan(Prop), 0, Prop)) %>% 
+  ungroup() %>% 
+  mutate(IdentI=factor(IdentI, levels=cluster_order)) %>% 
+  mutate(Label=factor(IdentI, levels=cluster_order, labels = labels_cl_parsed[as.character(cluster_order)]))
+
+df_clon_sign_p <- 
+  df_clon_sign %>% 
+  mutate(Entity=as.factor(Entity)) %>% 
+  mutate(Prop=Prop+sample(seq(0.01, 0.03, 0.0001), 17)) %>% 
+  group_by(IdentI) %>% 
+  wilcox_test(data=., formula = Prop ~ Entity, ref.group = "rLN", alternative = "less") %>% 
+  select(IdentI, Entity=group2, p) %>% 
+  mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
+  mutate(p=ifelse(p>0.05, NA, p)) %>% 
+  filter(!is.na(p)) %>% 
+  left_join(., data.frame(IdentI=factor(c(5,6,11)), height=c(106, 62.5, 50)))
+
+p <- list()
+
+for(i in c(1:4)){
+  
+  y <- list(c(3),c(5),c(6),c(11))[[i]]
+  ylim <- c(65, 125, 75, 58)
+  
+  p[[i]] <- df_clon_sign %>% 
+  filter(IdentI %in% y) %>% 
+  ggplot(aes(x=Entity, y=100*Prop, fill=IdentI))+
+  ggbeeswarm::geom_beeswarm(cex = 3.5, stroke=0.25, groupOnX = TRUE, shape = 21, size = 1.25,  alpha = 1, color="white")+
+  #geom_text(data=df_clon_sign_p %>% filter(IdentI %in% y), inherit.aes = F, aes(y=height, x=Entity, label=p), hjust=0.1, size=2.25, angle=45)+
+  geom_text(data=df_clon_sign_p %>% filter(IdentI %in% y), inherit.aes = F, aes(y=height, x=Entity, label=p), hjust=0.2, size=2.25, angle=45)+
+  scale_color_manual(values = colors_umap_cl, guide="none")+
+  scale_fill_manual(values = colors_umap_cl, guide="none")+
+  ylab("Cell number")+
+  scale_y_continuous(name="% of clontypes of size > 1", limits=c(0,ylim[i]))+
+  scale_x_discrete(expand = c(0.17,0.17))+
+  facet_wrap(~Label, ncol = 2, labeller = label_parsed)+
+  mytheme_1+
+  theme(axis.title.x = element_blank(),
+        strip.background = element_rect(color=NA),
+        plot.margin = unit(c(0.1, 0.2, 0, 0), units = "cm"),
+        panel.border = element_rect(size = 0.5),
+        axis.text.x = element_text(angle=45, hjust = 1))
+  
+  if(i!=1){
+    p[[i]] <- p[[i]]+
+      theme(axis.title.y = element_blank()
+            )
+  }
+  
+  if(i==1){
+    p[[i]] <- p[[i]]+
+      labs(tag = "B")
+  }
+  
+  if(i!=4){
+    p[[i]] <- p[[i]]+theme(
+      plot.margin = unit(c(0.1, 0.5, 0, 0), units = "cm"))
+  }
+  
+}
+
+wrap_plots(p, nrow = 1)
+#ggsave(width = 16, height = 5, units = "cm", filename = "ResponseFigure4.pdf")
 
 ```
 
@@ -120,7 +225,9 @@ p2 <- ggplot()+
   scale_fill_manual(values = colors_umap_cl, guide="none")+
   scale_color_manual(values = colors_umap_cl, guide="none")+
   facet_wrap(~Entity, nrow = 1)+
-  geom_text(data = df_clonotypes_shared_subset, aes(label = PatientID), 
+  geom_text(data = data.frame(PatientID=c("LN0132", "LN0302", "LN0193", "LN0198", "LN0078")) %>% 
+              add_entity() %>% 
+              mutate(Entity=factor(Entity, levels=c("rLN", "DLBCL", "MCL", "FL", "MZL"))), aes(label = PatientID), 
             x = 9.65, y = -6.9, hjust=1, check_overlap = T, size=2.25)+
   xlab("refUMAP-1")+
   ylab("refUMAP-2")+
@@ -129,11 +236,9 @@ p2 <- ggplot()+
   theme(legend.position = "none",
         strip.background = element_rect(size=0.25),
         panel.border = element_rect(size=0.25, color="black"))+
-  labs(tag = "B")
+  labs(tag = "C")
 
 p2
-
-p_full <- p1/p2
 
 #ggsave(p_full, width = 19, height = 11.75, units = "cm", filename = "PDFs/Figure4.pdf")
 
@@ -166,6 +271,14 @@ p_legend <-
 as_ggplot(get_legend(p_legend))
 
 #ggsave(as_ggplot(get_legend(p_legend)), width = 13.5, height = 1, units = "cm", filename = "Figure4_legend.pdf")
+
+```
+
+# Compose
+```{r}
+
+p_full <- p1/wrap_plots(p[[1]], p[[2]], p[[3]], p[[4]], nrow = 1)/p2
+ggsave(p_full, width = 19, height = 16.75, units = "cm", filename = "Figure4.pdf")
 
 ```
 

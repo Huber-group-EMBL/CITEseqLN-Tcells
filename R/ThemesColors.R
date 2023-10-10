@@ -254,22 +254,7 @@ labels_cl <- list(
   "19"=expression('T'[DN])
 )
 
-labels_cl_parsed <- list(
-  'T'[Pr]~'', 
-  'T'[H]~'Naive',
-  'T'[H]~'CM'[I]~'',
-  'T'[H]~'CM'[II]~'',
-  'T'[FH]~'',
-  'T'[REG]~'CM'[I]~'',
-  'T'[REG]~'CM'[II]~'',
-  'T'[REG]~'EM'[I]~'',
-  'T'[REG]~'EM'[II]~'',
-  'T'[TOX]~'Naive',
-  'T'[TOX]~'EM'[I]~'',
-  'T'[TOX]~'EM'[II]~'',
-  'T'[TOX]~'EM'[III]~'',
-  'T'[DN]~''
-)
+
 # Set other
 limits_codex <- c("B", "TPR", "CD4TNaive", "CD4T", "TFH", "Treg", "TTOXNaive", "TTOX_exh", "TTOX", "Stromal cells", "Myeloid", "FDC", "Other")
 order_nn <- c( "B", "FDC", "TFH", "CD4T", "Treg", "CD4TNaive", "TTOXNaive", "TPR", "TTOX", "TTOX_exh",  "Myeloid", "Stroma")
