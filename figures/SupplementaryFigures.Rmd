@@ -291,18 +291,121 @@ plot_surface+plot_surfaceplus+plot_layout(guides = "collect", widths = c(1,1))
 
 ```
 
-## Gating I
-Created using FlowJo. 
-```{r gating I}
-
-```
-
 # Supplementary Figure 3
-## Gating II
-Created using FlowJo. 
-```{r gating II}
+## Frequencies overview
+```{r freq overview SF3}
+
+df_pop
+
+mat_complete <- rbind(
+  df_facs %>% 
+    left_join(., df_meta %>% select(PatientID, `CITEseq`)) %>% 
+    filter(`CITEseq`=="-") %>% 
+    select(PatientID, Population, Prop=FACS),
+  df_freq %>% 
+    mutate(RNA=ifelse(is.nan(RNA), 0, RNA)) %>% 
+    select(PatientID, Population, Prop=RNA)) %>% 
+  filter(Population %in% df_pop$Population) %>% 
+  left_join(., df_pop) %>% 
+  select(-Population) %>% 
+  left_join(., df_meta %>% select(PatientID, Tcells)) %>% 
+  mutate(Prop=Tcells*Prop/100) %>% 
+  select(-Tcells) %>% 
+  pivot_wider(names_from = "IdentI", values_from = "Prop", values_fill = 0) %>% 
+  column_to_rownames("PatientID") 
+
+cl_order <- c(6,1,2,9,8,13,15,11,12,16,3,5,14,19)
+names(labels_cl_parsed) <- as.character(cluster_order)
+
+df_freqPlot <- 
+  mat_complete %>% 
+  rownames_to_column("PatientID") %>% 
+  pivot_longer(cols=2:ncol(.), names_to = "IdentI", values_to = "Prop") %>% 
+  add_entity() %>% 
+  mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
+  mutate(IdentI=factor(IdentI, levels=cl_order)) %>% 
+  mutate(Label=factor(IdentI, levels=cl_order, labels = labels_cl_parsed[as.character(cl_order)])) %>% 
+  group_by(Entity, IdentI) %>% 
+  mutate(outlier = (Prop > quantile(Prop, 0.75) + IQR(Prop) * 1.5) | (Prop < quantile(Prop, 0.25) - IQR(Prop) * 1.5))
+
+df_medianLines <- df_freqPlot %>% 
+  filter(Entity=="rLN") %>% 
+  group_by(IdentI, Label) %>% 
+  summarise(MedianProp=median(Prop))
+
+df_freqPlot_pvalues <- df_freqPlot %>% 
+  group_by(IdentI) %>% 
+  wilcox_test(data=., formula = Prop ~ Entity, detailed = T, ref.group = "rLN") %>% 
+  adjust_pvalue(method = "BH") %>% 
+  select(IdentI, Entity=group2, p.adj, estimate) %>% 
+  mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
+  mutate(p.adj=ifelse(p.adj>0.05, NA, p.adj)) %>% 
+  mutate(p.adj=ifelse(p.adj<0.001, "< 0.001", round(p.adj, 3))) %>% 
+  filter(!is.na(p.adj)) %>% 
+  left_join(., df_freqPlot %>% select(IdentI,  Label) %>% distinct) %>% 
+  left_join(., data.frame(IdentI=factor(cl_order), height=c(28, 28, 21, 21, 10, 10, 12, 12, 14, 14, 50, 50, 12, 12)))
 
 ```
+
+## Plot
+```{r freq overview, fig.height=6, fig.width=5.2}
+
+p <- list()
+
+for(i in c(1:7)){
+  
+  y <- list(c(1,6),c(2,9),c(8,13),c(15,11),c(12,16),c(3,5),c(14,19))[[i]]
+  ylim <- c(38,30,13,15.5,20,65,15)
+  
+  p[[i]] <- 
+    ggplot(data=df_freqPlot %>% filter(IdentI %in% y) %>% 
+             mutate(Label=factor(Label, levels = labels_cl_parsed[as.character(y)])), 
+             aes(y=Prop, x=Entity, fill=IdentI))+
+    geom_hline(data=df_medianLines %>%filter(IdentI %in% y), aes(yintercept=MedianProp),
+               size=0.25, linetype="dashed", color="grey60")+
+    geom_boxplot(width=0.4, outlier.shape = 21, outlier.size = 1, outlier.color = "white", 
+                 outlier.alpha = 0, show.legend = F, size=0.25)+
+    ggbeeswarm::geom_beeswarm(data = function(x) dplyr::filter_(x, ~ outlier), cex = 3, stroke=0.25, 
+                              groupOnX = TRUE, shape = 21, size = 1, color = "white", alpha = 1)+
+    geom_text(data=df_freqPlot_pvalues %>% filter(IdentI %in% y), 
+              inherit.aes = F, aes(y=height, x=Entity, label=p.adj), hjust=0.1, size=2.2, angle=45)+
+    scale_fill_manual(values = colors_umap_cl)+
+    scale_y_continuous(name="% of total cells", limits=c(0,ylim[i]))+
+    scale_x_discrete(expand = c(0.17,0.17))+
+    facet_wrap(~Label, ncol = 2, labeller = label_parsed)+
+    mytheme_1+
+    theme(axis.title.x = element_blank(),
+          strip.background = element_rect(color=NA),
+          plot.margin = unit(c(0.1,0.25,0,0), units = "cm"),
+          panel.border = element_rect(size = 0.5),
+          axis.text.x = element_text(angle=45, hjust = 1))
+  
+  if(i!=7){
+    p[[i]] <- p[[i]]+
+      theme(axis.text.x = element_blank(),
+            axis.ticks.x = element_blank())
+  }
+  
+  if(!i %in% c(4,5)){
+    p[[i]] <- p[[i]]+
+      theme(axis.title.y = element_blank())
+    }
+  
+  if(i==1){
+    p[[i]] <- p[[i]]+
+      labs(tag = "A")+
+      theme(plot.tag = element_text(vjust = -0.5))
+}
+  p[[i]]
+  
+}
+
+plot_freq <- wrap_plots(p, ncol = 2)
+plot_freq
+#ggsave(width = 19, height = 15, units = "cm", filename = "SF3.pdf")
+
+```
+
 
 # Supplementary Figure 4
 ## Lasso model (beta coefficients)
@@ -459,7 +562,8 @@ df_freq_5prime <- DFtotal_5prime %>%
   select(Barcode_full, IdentI, PatientID) %>% 
   distinct() %>% 
   add_prop(vars = c("PatientID", "IdentI"), group.vars = 1) %>% 
-  mutate(Class="5prime")
+  mutate(Class="5prime") %>% 
+  filter(PatientID %in% unique(df_comb$PatientID))
 
 df_freq_3prime <- df_comb %>% 
   add_prop(vars = c( "PatientID", "IdentI"), group.vars = 1) %>% 
@@ -867,15 +971,33 @@ plots[[i]] <-
 
 imm_raref <- repDiversity(DF_immunarchTCR$data, "raref", .verbose = F) %>% 
   rename(PatientID=Sample) %>% 
-  add_entity() 
+  add_entity() %>% 
+  filter(!PatientID %in% c("LN0256", "LN0367"))
 
 tops <- imm_raref %>% 
   group_by(PatientID) %>% 
   top_n(n=1, Size) %>% 
-  mutate(Mean=ifelse(PatientID=="LN0302", 5.0, Mean)) %>% 
-  mutate(Size=ifelse(PatientID!="LN0217", Size+6, Size)) 
+  #mutate(Mean=ifelse(PatientID=="LN0302", 5.0, Mean)) %>% 
+  mutate(Size=ifelse(PatientID=="LN0132", 88, Size)) %>% 
+  mutate(Size=ifelse(PatientID=="LN0110", 72, Size)) %>% 
+  mutate(Mean=ifelse(PatientID=="LN0110", 19, Mean)) %>% 
+  mutate(Size=ifelse(PatientID=="LN0259", 90, Size)) %>% 
+  mutate(Mean=ifelse(PatientID=="LN0259", 20.75, Mean)) %>% 
+  mutate(Size=ifelse(PatientID=="LN0264", 55, Size)) %>% 
+  mutate(Mean=ifelse(PatientID=="LN0264", 13.5, Mean)) %>% 
+  mutate(Size=ifelse(PatientID=="LN0217", Size-10, Size)) %>% 
+  mutate(Size=ifelse(PatientID=="LN0144", 145, Size)) %>% 
+  mutate(Mean=ifelse(PatientID=="LN0193", Mean+1, Mean)) %>% 
+  mutate(Size=ifelse(PatientID=="LN0198", 115, Size)) %>% 
+  mutate(Mean=ifelse(PatientID=="LN0198", Mean+0.2, Mean)) %>% 
+  mutate(Mean=ifelse(PatientID=="LN0278", Mean+1, Mean)) %>% 
+  mutate(Mean=ifelse(PatientID=="LN0144", Mean+0.75, Mean)) %>% 
+  mutate(Mean=ifelse(PatientID=="LN0302", Mean-1.5, Mean)) %>% 
+  mutate(Size=ifelse(PatientID=="LN0302", 50, Size)) %>% 
+  filter(!PatientID %in% c("LN0417", "LN0104", "LN0249")) # Manuel labelling in Powerpoint
 
-plot_rare <- imm_raref %>%
+plot_rare <- 
+  imm_raref %>%
   ggplot(aes(x=Size, y=Mean, group=PatientID, color=Entity))+
   geom_line(linetype="solid", size=0.25)+
   geom_label(data=tops, aes(x=Size, y=Mean, label=PatientID),  size=2.25, 
@@ -886,9 +1008,9 @@ plot_rare <- imm_raref %>%
   scale_color_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
   ylab("Estimated diversity")+
   xlab("Clone size")+
-  xlim(0, 70)+
+  #xlim(0, 70)+
   mytheme_1+
-  theme(legend.position = "top",
+  theme(#legend.position = "top",
         legend.title = element_blank(),
         panel.grid = element_blank(),
         legend.spacing.x = unit("cm", x = 0.05),
@@ -1461,7 +1583,7 @@ ggraph(mygraph_codex, layout = 'tree', circular = FALSE) +
   theme(plot.margin = unit(c(-0.5,0.35,0.25,0.25), units = "cm"),
         plot.title = element_text(hjust = 0.4, vjust=-7.5, size=7))
 
-#ggsave(filename = "Figure7_p2.pdf", width = 13, height = 4.25, units = "cm")
+#ggsave(filename = "Figure8_p2.pdf", width = 13, height = 4.25, units = "cm")
 
 ```
 
@@ -1750,14 +1872,14 @@ freq_joined %>%
 ```
 
 ## Assemble plot
-```{r assemble SF8, fig.height=5.5}
+```{r assemble SF9, fig.height=5.5}
 
 p_full <- wrap_plots(p2/p3+plot_layout(heights = c(1.25,1)))+wrap_plots(cor_plots_codex$TPR+labs(tag = "E")+cor_plots_codex$THNaive+cor_plots_codex$TH+cor_plots_codex$TFH+
   cor_plots_codex$TREG+cor_plots_codex$TTOXNaive+cor_plots_codex$TTOX+cor_plots_codex$TTOX_exh+
   plot_layout(ncol = 2))+
   plot_layout(widths = c(2.25,1.15))
 p_full
-#ggsave(p_full, width = 19, height = 14, units = "cm", filename = "SF3.pdf")
+#ggsave(p_full, width = 19, height = 14, units = "cm", filename = "SF8.pdf")
 
 
 ```
@@ -1794,7 +1916,7 @@ for(r in c("191_3reg008", "191_4reg004", "191_2reg007", "191_5reg002", "191_1reg
 
 plots_codex
 
-#ggsave(wrap_plots(plots_codex), width = 19, height = 12.5, units = "cm", filename = "Figure7_p2.pdf")
+#ggsave(wrap_plots(plots_codex), width = 19, height = 12.5, units = "cm", filename = "SFigure9_p2.pdf")
 
 legend_plot_codex <- ggplot()+
   geom_point_rast(data=df_tmp %>% filter(Merged_all_simple!="B"), aes(x=x,y=y, fill=Merged_all_simple, color=Merged_all_simple), 
@@ -1817,7 +1939,7 @@ legend_plot_codex <- ggplot()+
         legend.title = element_blank())
 
 as_ggplot(get_legend(legend_plot_codex))
-#ggsave(width = 4, height = 4, units = "cm", filename = "Figure7_p2_legend.pdf")
+#ggsave(width = 4, height = 4, units = "cm", filename = "SFigure9_p2_legend.pdf")
 
 ```
 
@@ -1907,12 +2029,12 @@ p_full <-
 
 p_full
 
-#ggsave(p_full, width = 19, height = 11.5, units = "cm", filename = "SF10.pdf")
+#ggsave(p_full, width = 19, height = 11.5, units = "cm", filename = "SF11.pdf")
 
 ```
 
 ### Legend
-```{r legend SF8, fig.height=1}
+```{r legend SF10, fig.height=1}
 
 labels_nn <- c(
   "N1: B-cells / FDC" ,
@@ -1953,7 +2075,7 @@ p_legend <- codex_annotation %>%
 
 as_ggplot(get_legend(p_legend))
 
-#ggsave(width = 19, height = 1.5, units = "cm", filename = "SF10_legend.pdf")
+#ggsave(width = 19, height = 1.5, units = "cm", filename = "SF11_legend.pdf")
 
 ```
 
