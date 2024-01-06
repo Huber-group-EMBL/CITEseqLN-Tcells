@@ -30,7 +30,7 @@ source("R/Helpers.R")
 
 ```
 
-# Frequencies overview
+# Proportions overview
 ## Handle data and calculate p values
 ```{r create matrix}
 
@@ -76,7 +76,7 @@ df_freqPlot_pvalues <- df_freqPlot %>%
   select(IdentI, Entity=group2, p.adj, estimate) %>% 
   mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
   mutate(p.adj=ifelse(p.adj>0.05, NA, p.adj)) %>% 
-  mutate(p.adj=ifelse(p.adj<0.001, "< 0.001", round(p.adj, 3))) %>% 
+  mutate(p.adj=ifelse(p.adj<0.01, "< 0.01", round(p.adj, 2))) %>% 
   filter(!is.na(p.adj)) %>% 
   left_join(., df_freqPlot %>% select(IdentI,  Label) %>% distinct) %>% 
   left_join(., data.frame(IdentI=factor(cl_order), height=c(50, 50, 21, 21, 22, 22, 18, 18, 24, 24, 75, 75, 19, 19)))
@@ -104,7 +104,7 @@ for(i in c(1:7)){
     ggbeeswarm::geom_beeswarm(data = function(x) dplyr::filter_(x, ~ outlier), cex = 3, stroke=0.25, 
                               groupOnX = TRUE, shape = 21, size = 1, color = "white", alpha = 1)+
     geom_text(data=df_freqPlot_pvalues %>% filter(IdentI %in% y), 
-              inherit.aes = F, aes(y=height, x=Entity, label=p.adj), hjust=0.1, size=2.2, angle=45)+
+              inherit.aes = F, aes(y=height, x=Entity, label=p.adj), hjust=0.1, size=2.3, angle=45)+
     scale_fill_manual(values = colors_umap_cl)+
     scale_y_continuous(name="% of total T-cells", limits=c(0,ylim[i]))+
     scale_x_discrete(expand = c(0.17,0.17))+
@@ -112,7 +112,8 @@ for(i in c(1:7)){
     mytheme_1+
     theme(axis.title.x = element_blank(),
           strip.background = element_rect(color=NA),
-          plot.margin = unit(c(0.1,0,0,0), units = "cm"),
+          plot.margin = unit(c(0,0,0,0), units = "cm"),
+          plot.title = element_text(margin = unit(c(0,0,0,0), units = "cm")),
           panel.border = element_rect(size = 0.5),
           axis.text.x = element_text(angle=45, hjust = 1))
   
@@ -138,7 +139,7 @@ for(i in c(1:7)){
 
 plot_freq <- wrap_plots(p, ncol = 1)
 plot_freq
-#ggsave(width = 9.3, height = 22.4, units = "cm", filename = "Figure3_p1.pdf")
+#ggsave(width = 9, height = 21, units = "cm", filename = "Figure3_p1.pdf")
 
 ```
 
@@ -280,6 +281,8 @@ gt <- my_glmnet(total)
 ## Confusion matrix
 ```{r lasso plot, fig.height=3, fig.width=3}
 
+entities <- c("DLBCL", "MCL", "FL", "MZL", "rLN")
+
 tbl <- gt$confusion_table
 class(tbl) = "matrix"
 tbl = tbl / rowSums(tbl) # convert to probability estimates
@@ -329,10 +332,10 @@ plot_status_ident1 <-
   geom_boxplot(width=0.35, size=0.25, aes(fill=Entity),  position = position_dodge(width = 0.6),
                outlier.shape = 21, outlier.size = 1, outlier.color = "white", outlier.alpha = 0.75)+
   stat_compare_means(comparisons = list(c("Initial diagnosis", "Relapse")), vjust = -0.35, label.y = c(28),
-                     size=2.25, tip.length = 0.02, bracket.size = 0.25)+
+                     size=2.5, tip.length = 0.02, bracket.size = 0.25)+
   scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
   ggtitle(labels_cl[["1"]])+
-  scale_y_continuous(name="% of total T-cells", expand = c(0.05,0.15), limits=c(0,32))+
+  scale_y_continuous(name="% of total T-cells", expand = c(0.05,0.15), limits=c(0,35))+
   scale_x_discrete(labels=c("Initial \ndiagnosis", "Relapse"))+
   mytheme_1+
   theme_characteristics+
@@ -344,9 +347,9 @@ plot_age_ident1 <-
   ggplot(aes(x=Age, y=Prop))+
   geom_point(size=1.25, color="grey65", shape=21, stroke=0, aes(fill=Entity))+
   geom_smooth(method = "lm", color="black", size=0.25, linetype="dashed", alpha=0.25,  formula = 'y ~ x')+
-  stat_cor(size=2.25)+
+  stat_cor(size=2.5)+
   scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
-  scale_y_continuous(name="% of total T-cells", expand = c(0.05,0.15), limits=c(0,32))+
+  scale_y_continuous(name="% of total T-cells", expand = c(0.05,0.15), limits=c(0,35))+
   ggtitle(labels_cl[["1"]])+
   mytheme_1+
   theme_characteristics+
@@ -360,10 +363,10 @@ plot_status_ident9 <-
   geom_boxplot(width=0.35, size=0.25, aes(fill=Entity),  position = position_dodge(width = 0.6),
                outlier.shape = 21, outlier.size = 1, outlier.color = "white", outlier.alpha = 0.75)+
   stat_compare_means(comparisons = list(c("Initial diagnosis", "Relapse")), vjust = -0.35, label.y = c(28),
-                     size=2.25, tip.length = 0.02, bracket.size = 0.25)+
+                     size=2.5, tip.length = 0.02, bracket.size = 0.25)+
   scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
   ggtitle(labels_cl[["9"]])+
-  scale_y_continuous(name="% of total T-cells", expand = c(0.05,0.15), limits=c(0,32))+
+  scale_y_continuous(name="% of total T-cells", expand = c(0.05,0.15), limits=c(0,35))+
   scale_x_discrete(labels=c("Initial \ndiagnosis", "Relapse"))+
   mytheme_1+
   theme_characteristics+
@@ -376,10 +379,10 @@ plot_status_ident13 <-
   geom_boxplot(width=0.35, size=0.25, aes(fill=Entity),  position = position_dodge(width = 0.6),
                outlier.shape = 21, outlier.size = 1, outlier.color = "white", outlier.alpha = 0.75)+
   stat_compare_means(comparisons = list(c("Initial diagnosis", "Relapse")), vjust = -0.35, label.y = c(29),
-                     size=2.25, tip.length = 0.02, bracket.size = 0.25)+
+                     size=2.5, tip.length = 0.02, bracket.size = 0.25)+
   scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
   ggtitle(labels_cl[["13"]])+
-  scale_y_continuous(name="% of total T-cells", expand = c(0.05,0.15), limits=c(0,33))+
+  scale_y_continuous(name="% of total T-cells", expand = c(0.05,0.15), limits=c(0,35))+
   scale_x_discrete(labels=c("Initial \ndiagnosis", "Relapse"))+
   mytheme_1+
   theme_characteristics+
@@ -387,7 +390,7 @@ plot_status_ident13 <-
 
 plot_status_ident1+plot_age_ident1+plot_status_ident9+plot_status_ident13
 
-#ggsave(width = 10.1, height = 10.35, units = "cm", filename = "Figure3_p5.pdf")
+#ggsave(width = 9.5, height = 9.65, units = "cm", filename = "Figure3_p5.pdf")
 
 ```
 

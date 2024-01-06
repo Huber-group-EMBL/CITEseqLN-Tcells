@@ -55,7 +55,7 @@ plot_umap <- df_comb %>%
   ggplot(aes(x=wnnUMAP_1, y=wnnUMAP_2, fill=as.factor(IdentI)))+
   ggrastr::geom_point_rast(size=0.35, stroke=0, shape=21, raster.dpi = 200, alpha=0.75)+
   geom_text(data=median_umap, aes(x=Median1, color=Code, y=Median2, label=paste0("C", IdentI_label)), 
-            size=2.25, fontface="bold")+
+            size=2.5, fontface="bold")+
   scale_color_manual(values = c("black", "grey96"), guide="none")+
   scale_fill_manual(values = colors_umap_cl, limits=factor(cluster_order), labels=unlist(labels_cl))+
   scale_x_continuous(limits = c(ori[1],10), expand = c(0,0))+
@@ -66,9 +66,9 @@ plot_umap <- df_comb %>%
   annotation_custom(grob = linesGrob(gp=gpar(fill="black", lex=0.25), 
                                      arrow = arrow(ends = "last", type="closed", length=unit(0.15, "cm"))), 
                     ymin = ori[2]+off, ymax = ori[2]+off+l, xmin=ori[1]+off, xmax=ori[1]+off)+
-  annotation_custom(grob = textGrob(label = "wnnUMAP-1", gp = gpar(cex=0.5)), 
+  annotation_custom(grob = textGrob(label = "wnnUMAP-1", gp = gpar(cex=0.6)), 
                     xmin = ori[1]+off+l/2, xmax = ori[1]+off+l/2, ymin=ori[2]+off/3, ymax=ori[2]+off/3)+
-  annotation_custom(grob = textGrob(label = "wnnUMAP-2", gp = gpar(cex=0.5), rot = 90), 
+  annotation_custom(grob = textGrob(label = "wnnUMAP-2", gp = gpar(cex=0.6), rot = 90), 
                     xmin=ori[1]+off/3, xmax=ori[1]+off/3, ymin=ori[2]+off+l/2, ymax=ori[2]+off+l/2)+
     
   coord_fixed(clip = "off")+
@@ -142,7 +142,7 @@ plot_genex <-
   theme_bw()+
   mytheme_1+
   theme(axis.title = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size=6.5),
+        axis.text.x = element_text(angle = 45, hjust = 1, size=7),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         plot.margin = unit(c(0.25,0.35,0,2), "cm"))
@@ -155,24 +155,24 @@ for(i in 1:length(cluster_order)) {
    annotation_custom(grob = rectGrob(gp = gpar(fill=colors_umap_cl[as.character(rev(cluster_order)[i])], lex=1, col="white")), 
                     ymin = seq(0.5, length(cluster_order)-0.5, 1)[i], 
                     ymax = seq(1.5, length(cluster_order)+0.5, 1)[i],
-                    xmin = 0, xmax = -1.2)+
-   annotation_custom(grob = textGrob(label = paste0("C", c(14:1)[i]), gp = gpar(cex=0.45, col=ifelse(i %in% c(6,7,11,14), "white", "black"))),
+                    xmin = 0, xmax = -1.5)+
+   annotation_custom(grob = textGrob(label = paste0("C", c(14:1)[i]), gp = gpar(cex=0.6, col=ifelse(i %in% c(6,7,11,14), "white", "black"))),
                     ymin = seq(0.5, length(cluster_order)-0.5, 1)[i], 
                     ymax = seq(1.5, length(cluster_order)+0.5, 1)[i],
-                    xmin = 0, xmax = -1.2)
+                    xmin = 0, xmax = -1.5)
 }
 
 for(i in 1:length(lines)) {
   
   plot_genex <- plot_genex+
-    annotation_custom(grob = textGrob(label = rev(labels_celltypes_expr)[[i]], rot = 0, hjust = 1, gp = gpar(cex=0.7)), 
+    annotation_custom(grob = textGrob(label = rev(labels_celltypes_expr)[[i]], rot = 0, hjust = 1, gp = gpar(cex=0.6)), 
                       ymin = c(0,lines)[i]+0.5,
                       ymax = c(lines)[i]+0.5,
-                      xmin = -1.45, xmax = -1.45)+
+                      xmin = -1.65, xmax = -1.65)+
     annotation_custom(grob = linesGrob(gp = gpar(col="white", lex=3)),
                       ymin = c(0,lines)[i]+0.5,
                       ymax = c(0,lines)[i]+0.5,
-                      xmin = -0.01, xmax = -1.2)
+                      xmin = -0.01, xmax = -1.5)
 }
 
 plot_genex <- plot_genex+labs(tag = "B")+
@@ -225,7 +225,7 @@ plot_protex <-
   mytheme_1+
   theme(axis.title = element_blank(),
         legend.position = "right",
-        axis.text.x = element_text(angle = 45, hjust = 1, size=6.5),
+        axis.text.x = element_text(angle = 45, hjust = 1, size=7),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         legend.text = element_text(size = 7, color="black"),
@@ -242,9 +242,9 @@ plot_protex <-
 # Assemble plot
 ```{r assemble plot, fig.height=4}
 
-plot_genex+plot_protex+plot_layout(widths = c(1, 1.25))
+plot_genex+plot_protex+plot_layout(widths = c(1, 1.15))
 
-#ggsave(filename = "Figure1_p2.pdf", width = 16, height = 7.9, units = "cm")
+#ggsave(filename = "Figure1_p2.pdf", width = 15, height = 7.8, units = "cm")
 
 ```
 
@@ -286,7 +286,7 @@ plot_tfact <-
   theme_bw()+
   mytheme_1+
   theme(axis.title = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size=6.5),
+        axis.text.x = element_text(angle = 45, hjust = 1, size=7),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         panel.border = element_rect(size=0.25),
@@ -308,11 +308,11 @@ for(i in 1:length(cluster_order)) {
    annotation_custom(grob = rectGrob(gp = gpar(fill=colors_umap_cl[as.character(rev(cluster_order)[i])], lex=1, col="white")), 
                     ymin = seq(0.5, length(cluster_order)-0.5, 1)[i], 
                     ymax = seq(1.5, length(cluster_order)+0.5, 1)[i],
-                    xmin = 0, xmax = -1.2)+
-   annotation_custom(grob = textGrob(label = paste0("C", c(14:1)[i]), gp = gpar(cex=0.45, col=ifelse(i %in% c(6,7,11,14), "white", "black"))),
+                    xmin = 0, xmax = -1.5)+
+   annotation_custom(grob = textGrob(label = paste0("C", c(14:1)[i]), gp = gpar(cex=0.6, col=ifelse(i %in% c(6,7,11,14), "white", "black"))),
                     ymin = seq(0.5, length(cluster_order)-0.5, 1)[i], 
                     ymax = seq(1.5, length(cluster_order)+0.5, 1)[i],
-                    xmin = 0, xmax = -1.2)
+                    xmin = 0, xmax = -1.5)
 }
 
 for(i in 1:length(lines)) {
@@ -321,7 +321,7 @@ for(i in 1:length(lines)) {
     annotation_custom(grob = linesGrob(gp = gpar(col="white", lex=3)),
                       ymin = c(0,lines)[i]+0.5,
                       ymax = c(0,lines)[i]+0.5,
-                      xmin = -0.01, xmax = -1.2)
+                      xmin = -0.01, xmax = -1.5)
 }
 
 plot_tfact

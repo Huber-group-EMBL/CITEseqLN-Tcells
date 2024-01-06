@@ -60,7 +60,7 @@ image_rln <- ggplot()+
         legend.spacing.x = unit("cm", x = 0.1),
         legend.key.height = unit("cm", x = 0.34),
         legend.key.width = unit("cm", x = 0.2),
-        legend.text = element_text(color="white", size=6.5),
+        legend.text = element_text(color="white", size=7),
         plot.title = element_text(color="white", hjust=0.1, size=8, 
                                   margin = unit(units = "cm", c(0,0,-0.6,0)), face = "bold"),
         plot.margin = unit(units = "cm", c(0.35, 0.1, 0.1, 0.1)),
@@ -69,7 +69,7 @@ image_rln <- ggplot()+
 
 image_rln
 
-#ggsave(width = 8, height = 5.5, units = "cm", filename = "Figure7_p1.pdf")
+#ggsave(width = 7, height = 4.75, units = "cm", filename = "Figure7_p1.pdf")
 
 ```
 
@@ -161,7 +161,7 @@ plot_pca <- pca_codex$x %>%
 
 plot_pca
 
-#ggsave(width = 5, height = 6.1, units = "cm", filename = "Figure7_p3.pdf")
+#ggsave(width = 5, height = 5.1, units = "cm", filename = "Figure7_p3.pdf")
 
 ```
 
@@ -219,7 +219,7 @@ for(i in 1:length(pheat_nh$tree_row$order)) {
                       ymin = seq(0.5, length(colors_nn)-0.5, 1)[i], 
                       ymax = seq(1.5, length(colors_nn)+0.5, 1)[i],
                       xmin = 0, xmax = -1.1)+
-    annotation_custom(grob = textGrob(label = paste0("N", order_y)[i], gp = gpar(cex=0.5)), 
+    annotation_custom(grob = textGrob(label = paste0("N", order_y)[i], gp = gpar(cex=0.6)), 
                       ymin = seq(0.5, length(colors_nn)-0.5, 1)[i], 
                       ymax = seq(1.5, length(colors_nn)+0.5, 1)[i],
                       xmin = 0, xmax = -1.1)
@@ -277,14 +277,14 @@ plot_freq_nn <- df_freq_nh %>%
              size=0.25, linetype="dashed", color="grey60")+
   geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
   ggbeeswarm::geom_beeswarm(size=0.8, shape=21, stroke=0.1, cex = 1.75, aes(fill=Region))+
-  geom_text(data=pvalues, inherit.aes = F, aes(y=Y, x=Entity, label=p.adj), size=2.25)+
+  geom_text(data=pvalues, inherit.aes = F, aes(y=Y, x=Entity, label=p.adj), size=2.5)+
   geom_point(data = d, alpha=0, aes(x=Entity, y=Y))+
   scale_fill_manual(values = colors_nn)+
   scale_x_discrete(limits=c("rLN", "DLBCL", "MCL", "FL", "MZL"))+
   facet_wrap(~Region_nn, strip.position = "right", scales = "free_y")+
   ylab("% of total area")+
   mytheme_1+
-  theme(strip.text.y = element_text(angle = 0, size=5.5, margin = unit(units = "cm", c(0.075,0.075,0.075,0.075))),
+  theme(strip.text.y = element_text(angle = 0, size=7, margin = unit(units = "cm", c(0.075,0.075,0.075,0.075))),
         axis.text.x = element_text(angle=45, hjust=1),
         axis.title.x = element_blank(),
         plot.margin = unit(c(0,0,0,0.1), "cm"))+
@@ -299,7 +299,7 @@ g$grobs[[25]]$grobs[[1]]$children[[1]]$gp$fill <- colors_nn["1"]
 
 plot_nn_rLN+wrap_ggplot_grob(g)+plot_layout(widths = c(1.6,1.2))
 
-#ggsave(width = 19, height = 6, units = "cm", filename = "Figure7_p4.pdf")
+#ggsave(width = 18.3, height = 6, units = "cm", filename = "Figure7_p4.pdf")
 
 ```
 
@@ -458,30 +458,42 @@ for(e in names(art_max)){
     nn_sum %>% filter(Entity==e) %>% 
     group_by(Merged_final) %>% 
     summarise(Mean=mean(Prop), SEM=sd(Prop)/sqrt(length(Prop))) %>% 
-    top_n(Mean, n = 11) %>% 
+    top_n(Mean, n = 10) %>% 
     mutate(code=Merged_final=="FDC") %>% 
     mutate(SEM=ifelse(Mean>art_max[e], NA, SEM)) %>% 
     mutate(Mean_new=ifelse(Mean>art_max[e], art_max[e], Mean)) 
   
-plot_nn[[e]] <- selected %>% 
+  order_ <- selected %>% 
+    arrange(desc(Mean_new)) %>% 
+    pull(Merged_final)
+    
+  mean_pat <- nn_sum %>% filter(Entity==e) %>% 
+    left_join(codex_annotation %>% select(PatientID, unique_region) %>% distinct) %>% 
+    group_by(PatientID, Merged_final) %>% 
+    summarise(Mean_pat=mean(Prop))
+       
+ plot_nn[[e]] <- 
+    selected %>% 
     ggplot(aes(x=reorder(Merged_final, -Mean_new), y=Mean_new, fill=Merged_final, color=code))+
     geom_errorbar(aes(ymin=Mean_new, ymax=Mean_new+SEM), width=0.2, color="black", size=0.25)+
     geom_bar(stat = "identity", size=0.5, width=0.5, fill="white", color="white")+
     geom_bar(stat = "identity", size=0.25, width=0.5, alpha=0.6)+
+    ggbeeswarm::geom_beeswarm(data=mean_pat, inherit.aes = F, aes(x=Merged_final, y=Mean_pat),
+               color="black", stroke=0, size=0.65, alpha=0.5, cex=1.75)+
     annotation_custom(grob = textGrob(label = e, just = "right", x = 0.92, y=0.9, gp = gpar(cex=0.6)))+
     geom_segment(inherit.aes = F, 
                  aes(x=1, xend=1, y=1.02*Mean_new[1], yend=1.14*Mean_new[1]), 
                  color="black", size=0.15,
                  arrow = arrow(type = "closed", length = unit(units = "cm", 0.1)))+
-    geom_text(aes(x=2, y=1.08*Mean_new[1], label=round(Mean[1],1)), 
-              check_overlap = T, size=2.25, color="black")+
+    geom_text(aes(x=2.2, y=1.08*Mean_new[1], label=round(Mean[1],1)), 
+              check_overlap = T, size=2.5, color="black")+
     scale_color_manual(values = c("white", "black"), limits=c(F, T))+
     scale_fill_manual(values = colors_codex_exp)+
-    scale_x_discrete(labels=unlist(labels_codex_exp))+
-    scale_y_continuous(name = "% of cells closest\nto B-cells")+
+    scale_x_discrete(limits=order_, labels=unlist(labels_codex_exp))+
+    scale_y_continuous(name = "% of cells closest\nto B-cells", limits=c(0,1.15*art_max[e]))+
     mytheme_1+
     theme(legend.position = "none",
-          axis.text.x = element_text(angle=45, hjust=1, size=6),
+          axis.text.x = element_text(angle=45, hjust=1, size=7),
           plot.background = element_rect(fill = NA, colour = NA),
           panel.background = element_rect(fill = NA, colour = NA),
           plot.margin = unit(c(0,0.1,0,0), "cm"),
@@ -496,7 +508,7 @@ plot_nn$rLN+labs(tag = "G")+plot_nn$DLBCL+
   plot_nn$MCL+plot_nn$FL+
   plot_layout(nrow = 1)
 
-#ggsave(width = 19, height = 5, units = "cm", filename = "Figure7_p5.pdf")
+#ggsave(width = 18, height = 4.75, units = "cm", filename = "Figure7_p5.pdf")
 
 ```
 
