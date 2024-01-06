@@ -12,7 +12,7 @@ LN0271,DLBCL,non-GCB,ENT,69,M,Relapse,NA,Yes,20,+,Run 8,-,-,+,10
 LN0025,DLBCL,GCB,ENT,51,F,Relapse,NA,Yes,39,+,Run 16,-,-,-,11
 LN0153,DLBCL,GCB,ENT,79,F,Initial diagnosis,NA,No,40,-,NA,-,+,-,12
 LN0168,DLBCL,GCB,GS,76,M,Relapse,NA,Yes,45.7,-,NA,-,+,-,13
-LN0417,DLBCL,non-GCB,GS,60,F,Initial diagnosis,NA,No,46,-,NA,-,+,-,14
+LN0417,DLBCL,non-GCB,GS,60,F,Initial diagnosis,NA,No,46,-,NA,+,+,-,14
 LN0178,DLBCL,GCB,ENT,83,F,Initial diagnosis,NA,No,53,+,Run 5,+,-,-,15
 LN0251,DLBCL,non-GCB,ENT,53,M,Relapse,NA,Yes,53.7,+,Run 6,-,+,+,16
 LN0268,DLBCL,non-GCB,GS,68,F,Initial diagnosis,NA,No,54.4,-,NA,-,+,-,17
@@ -39,11 +39,11 @@ LN0124,FL,NA,ENT,77,M,Initial diagnosis,1/2,No,21.1,-,NA,-,+,-,37
 LN0024,FL,NA,ENT,61,M,Initial diagnosis,1/2,No,28,-,NA,-,+,-,38
 LN0254,FL,NA,ENT,84,M,Relapse,1/2,Yes,30,-,NA,-,+,-,39
 LN0267,FL,NA,ENT,58,F,Relapse,1/2,No,32,+,Run 10,-,-,-,40
-LN0243,FL,NA,GS,74,M,Relapse,3A,Yes,32.3,-,NA,-,+,-,41
+LN0243,FL,NA,GS,74,M,Relapse,3A,Yes,32.3,-,NA,+,+,-,41
 LN0097,FL,NA,GS,33,M,Initial diagnosis,1/2,No,36,+,Run 1,-,-,-,42
 LN0278,FL,NA,GS,71,F,Relapse,1/2,No,38.7,+,Run 12,+,+,-,43
 LN0273,FL,NA,GS,66,M,Relapse,3A,Yes,38.8,+,Run 9,-,+,+,44
-LN0249,FL,NA,ENT,81,F,Initial diagnosis,1/2,No,39.7,-,NA,-,+,-,45
+LN0249,FL,NA,ENT,81,F,Initial diagnosis,1/2,No,39.7,-,NA,+,+,-,45
 LN0378,FL,NA,ENT,67,F,Relapse,3A,Yes,40.2,-,NA,-,+,-,46
 LN0202,FL,NA,GS,61,F,Relapse,1/2,No,42,-,NA,-,+,-,47
 LN0144,FL,NA,GS,66,F,Initial diagnosis,3A,No,43.3,+,Run 3,+,+,-,48
@@ -67,7 +67,7 @@ LN0350,MCL,NA,ENT,54,F,Initial diagnosis,NA,No,10.6,-,NA,-,+,-,65
 LN0181,MCL,NA,GS,77,F,Relapse,NA,No,17.1,-,NA,-,+,-,66
 LN0367,MCL,NA,ENT,84,F,Initial diagnosis,NA,No,20.2,-,NA,-,+,-,67
 LN0176,MCL,NA,GS,76,M,Initial diagnosis,NA,No,21.3,+,Run 7,-,+,+,68
-LN0343,MCL,NA,GS,59,M,Initial diagnosis,NA,No,28.5,-,NA,-,+,-,69
+LN0343,MCL,NA,GS,59,M,Initial diagnosis,NA,No,28.5,-,NA,+,+,-,69
 LN0078,MCL,NA,GS,50,M,Initial diagnosis,NA,No,30,+,Run 9,+,-,+,70
 LN0040,MCL,NA,ENT,58,M,Initial diagnosis,NA,No,40.2,-,NA,-,+,-,71
 LN0110,MCL,NA,ENT,67,M,Initial diagnosis,NA,No,52,+,Run 3,+,-,+,72
@@ -83,7 +83,7 @@ LN0285,MZL,NA,GS,58,F,Relapse,NA,Yes,27,+,Run 14,-,-,-,81
 LN0152,MZL,NA,ENT,49,F,Initial diagnosis,NA,No,31,+,Run 3,-,-,-,82
 LN0217,MZL,NA,GS,62,M,Relapse,NA,No,39,+,Run 9,+,-,-,83
 LN0302,MZL,NA,GS,53,F,Relapse,NA,Yes,47.5,+,Run 16,+,-,-,84
-LN0104,MZL,NA,GS,60,M,Relapse,NA,No,53.4,-,NA,-,+,-,85
+LN0104,MZL,NA,GS,60,M,Relapse,NA,No,53.4,-,NA,+,+,-,85
 LN0166,MZL,NA,GS,51,F,Relapse,NA,Yes,54,+,Run 5,-,+,-,86
 LN0043,MZL,NA,ENT,78,M,Relapse,NA,Yes,59,+,Run 11,-,-,+,87
 LN0240,MZL,NA,ENT,83,M,Relapse,NA,Yes,70.2,-,NA,-,+,-,88
@@ -92,7 +92,7 @@ LN0139,rLN,NA,GS,75,F,NA,NA,NA,41,-,NA,-,+,-,90
 LN0080,rLN,NA,GS,50,M,NA,NA,NA,46,+,Run 11,-,-,-,91
 LN0259,rLN,NA,ENT,72,F,NA,NA,NA,47,+,Run 7,+,-,+,92
 LN0211,rLN,NA,GS,45,F,NA,NA,NA,48.7,+,Run 4,-,+,+,93
-LN0264,rLN,NA,GS,58,F,NA,NA,NA,57,-,NA,-,+,-,94
+LN0264,rLN,NA,GS,58,F,NA,NA,NA,57,-,NA,+,+,-,94
 LN0253,rLN,NA,GS,42,F,NA,NA,NA,57.3,-,NA,-,+,-,95
 LN0252,rLN,NA,GS,39,M,NA,NA,NA,57.4,-,NA,-,+,-,96
 LN0228,rLN,NA,ENT,22,F,NA,NA,NA,66,+,Run 7,-,-,-,97

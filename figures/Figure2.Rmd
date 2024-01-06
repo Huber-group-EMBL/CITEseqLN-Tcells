@@ -58,9 +58,9 @@ plot_markers <- varImp(GBresults_surfaceplus, scale = TRUE)[[1]] %>%
         panel.border = element_rect(size=0.25),
         axis.ticks.y = element_line(size=0.25),
         axis.ticks.x = element_blank(),
-        axis.text.y = element_text(size=6),
-        axis.title.y = element_text(size=6),
-        axis.text.x = element_text(size=6, angle=45, hjust=1))+
+        axis.text.y = element_text(size=7),
+        axis.title.y = element_text(size=7),
+        axis.text.x = element_text(size=7, angle=45, hjust=1))+
   labs(tag = "A")
 
 plot_markers
@@ -84,7 +84,7 @@ cor_plots_facs[["TFH"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["6"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["6"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.04), label.y.npc = c(0.9))+
   scale_x_continuous(limits = c(0,75), breaks = c(0, 25, 50, 75))+
   scale_y_continuous(limits = c(0,75), breaks = c(0, 25, 50, 75))+
   labs(
@@ -102,7 +102,7 @@ cor_plots_facs[["TPR"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["14"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["14"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.4), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.04), label.y.npc = c(0.9))+
   scale_x_continuous(limits = c(0,12), breaks = c(0, 4, 8, 12))+
   scale_y_continuous(limits = c(0,12), breaks = c(0, 4, 8, 12))+
  labs(
@@ -120,7 +120,7 @@ cor_plots_facs[["TDN"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["19"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["19"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.3), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,8), breaks = c(0, 2, 4, 6, 8))+
   scale_y_continuous(limits = c(0,8), breaks = c(0, 2, 4, 6, 8))+
   labs(
@@ -138,7 +138,7 @@ cor_plots_facs[["THCM1"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["2"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["2"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.35), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,17), breaks = c(0, 5, 10, 15))+
   scale_y_continuous(limits = c(0,17), breaks = c(0, 5, 10, 15))+
   labs(
@@ -156,7 +156,7 @@ cor_plots_facs[["THCM2"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["9"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["9"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.04), label.y.npc = c(0.9))+
   scale_x_continuous(limits = c(0,15), breaks = c(0, 5, 10, 15))+
   scale_y_continuous(limits = c(0,15), breaks = c(0, 5, 10, 15))+
   labs(
@@ -174,7 +174,7 @@ cor_plots_facs[["THNaive"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["1"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["1"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.04), label.y.npc = c(0.9))+
   scale_x_continuous(limits = c(0,25), breaks = c(0, 8, 16, 24))+
   scale_y_continuous(limits = c(0,25), breaks = c(0, 8, 16, 24))+
   labs(
@@ -192,7 +192,7 @@ cor_plots_facs[["TREG"]] <- df_cor %>%
   geom_point(color="#578bb9", size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color="#578bb9", se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45))+
   scale_y_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45))+
   labs(
@@ -210,7 +210,7 @@ cor_plots_facs[["TREG/CM1"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["8"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["8"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.04), label.y.npc = c(0.9))+
   scale_x_continuous(limits = c(0,55), breaks = c(0, 15, 30, 45))+
   scale_y_continuous(limits = c(0,55), breaks = c(0, 15, 30, 45))+
     labs(
@@ -228,7 +228,7 @@ cor_plots_facs[["TREG/EM2"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["11"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["11"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.3), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,92), breaks = c(0, 30, 60, 90))+
   scale_y_continuous(limits = c(0,92), breaks = c(0, 30, 60, 90))+
   labs(
@@ -246,7 +246,7 @@ cor_plots_facs[["TREG/EM1"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["15"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["15"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.3), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,50), breaks = c(0, 15, 30, 45))+
   scale_y_continuous(limits = c(0,50), breaks = c(0, 15, 30, 45))+
   labs(
@@ -264,7 +264,7 @@ cor_plots_facs[["TREG/CM2"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["13"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["13"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.3), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,47), breaks = c(0, 15, 30, 45))+
   scale_y_continuous(limits = c(0,47), breaks = c(0, 15, 30, 45))+
    labs(
@@ -282,7 +282,7 @@ cor_plots_facs[["TTOXNaive"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["12"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["12"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.04), label.y.npc = c(0.9))+
   scale_x_continuous(limits = c(0,27), breaks = c(0, 8, 16, 24))+
   scale_y_continuous(limits = c(0,27), breaks = c(0, 8, 16, 24))+
  labs(
@@ -300,7 +300,7 @@ cor_plots_facs[["TTOX"]] <- df_cor %>%
   geom_point(color="#b50923", size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color="#b50923", se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
   scale_y_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
    labs(
@@ -318,7 +318,7 @@ cor_plots_facs[["TTOX/EM1"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["3"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["3"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.04), label.y.npc = c(0.9))+
   scale_x_continuous(limits = c(0,85), breaks = c(0, 25, 50, 75))+
   scale_y_continuous(limits = c(0,85), breaks = c(0, 25, 50, 75))+
  labs(
@@ -336,7 +336,7 @@ cor_plots_facs[["TTOX/EM2"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["16"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = TRUE,
               color=colors_umap_cl[["16"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.3), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,57), breaks = c(0, 15, 30, 45))+
   scale_y_continuous(limits = c(0,57), breaks = c(0, 15, 30, 45))+
     labs(
@@ -354,7 +354,7 @@ cor_plots_facs[["TTOX/EM3"]] <- df_cor %>%
   geom_point(color=colors_umap_cl[["5"]], size=0.45, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x,  na.rm = TRUE,
               color=colors_umap_cl[["5"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.3), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
   scale_y_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
   labs(
@@ -399,7 +399,7 @@ plot_cor_full <- cor_plots_facs$TPR+labs(tag="B")+theme(plot.tag = element_text(
 
 plot_cor_full
 
-#ggsave(width = 19, height = 7, units = "cm", filename = "Figure2_p2.pdf")
+#ggsave(width = 18.5, height = 7, units = "cm", filename = "Figure2_p2.pdf")
 
 ```
 
@@ -419,8 +419,8 @@ FetchData(Combined_T, vars = c("integratedadt_.CD366", "integratedadt_.CD279", "
   mytheme_1+
   theme(axis.text = element_text(color="white"),
         panel.border = element_rect(size=0.5),
-        axis.title.x = element_text(vjust = 7, size=7),
-        axis.title.y = element_text(vjust = -5, size=7),
+        axis.title.x = element_text(vjust = 7, size=8),
+        axis.title.y = element_text(vjust = -5, size=8),
         axis.ticks.x =  element_blank(),
         axis.ticks.y =  element_blank())
 

@@ -46,13 +46,14 @@ p1 <-
   coord_cartesian(clip = "off")+
   theme(axis.text.x = element_blank(),
         axis.title.x = element_blank(),
+        axis.title.y = element_text(size=7),
         axis.ticks.x = element_blank(),
         plot.tag = element_text(margin = unit(c(0,0,0,-0.75), "cm")),
         plot.margin = unit(c(0.1,0.1,0,1), "lines"))
 
-cex_ <- 0.5
+cex_ <- 0.6
 pos_ <- -0.25
-size_ <- 2
+size_ <- 2.4
 
 p_ann <- 
   ggplot()+
@@ -90,8 +91,8 @@ plot_legend1 <-
   theme_void()+
   mytheme_1+
   theme(legend.position = "bottom",
-        legend.title = element_text(size=6, face = "bold"),
-        legend.text = element_text(size=6))
+        legend.title = element_text(size=7, face = "bold"),
+        legend.text = element_text(size=7))
 
 legend1 <- get_legend(plot_legend1)
 
@@ -106,8 +107,8 @@ plot_legend2 <-
   theme_void()+
   mytheme_1+
   theme(legend.position = "bottom",
-        legend.title = element_text(size=6, face = "bold"),
-        legend.text = element_text(size=6))
+        legend.title = element_text(size=7, face = "bold"),
+        legend.text = element_text(size=7))
 
 legend2 <- get_legend(plot_legend2)
 
@@ -123,8 +124,8 @@ plot_legend3 <-
   theme_void()+
   mytheme_1+
   theme(legend.position = "bottom",
-        legend.title = element_text(size=6, face = "bold"),
-        legend.text = element_text(size=6))
+        legend.title = element_text(size=7, face = "bold"),
+        legend.text = element_text(size=7))
 
 legend3 <- get_legend(plot_legend3)
 
@@ -141,7 +142,7 @@ p2 <- df_meta %>%
   ggplot(aes(x=Sex, y=Tcells))+
   geom_boxplot(width=0.35, size=0.25)+
   #ggbeeswarm::geom_beeswarm(size=0.8, shape=21, stroke=0.25, cex = 2.75, aes(fill=Entity))+
-  stat_compare_means(comparisons = list(c("F", "M")), label.y = 78, size=2.25, bracket.size = 0.25)+
+  stat_compare_means(comparisons = list(c("F", "M")), label.y = 78, size=2.5, bracket.size = 0.25)+
   scale_fill_manual(values = hue_pal()(5))+
   scale_x_discrete(labels=c("Female", "Male"))+
   ylim(0,90)+
@@ -159,7 +160,7 @@ p3 <- df_meta %>%
   ggplot(aes(x=Status, y=Tcells))+
   geom_boxplot(width=0.35, size=0.25)+
   #ggbeeswarm::geom_beeswarm(size=0.8, shape=21, stroke=0.25, cex = 2.75, aes(fill=Entity))+
-  stat_compare_means(comparisons = list(c("Initial diagnosis", "Relapse")), label.y = 78, bracket.size = 0.25, size=2.25)+
+  stat_compare_means(comparisons = list(c("Initial diagnosis", "Relapse")), label.y = 78, bracket.size = 0.25, size=2.5)+
   scale_x_discrete(labels=c("Initial \ndiagnosis", "Relapse"))+
   scale_fill_manual(values = hue_pal()(5))+
   ylim(0,90)+
@@ -175,7 +176,7 @@ p5 <- df_meta %>%
   filter(Tcells>1) %>% 
   ggplot(aes(x=Age, y=Tcells))+
   geom_point(size=1.25, shape=21, stroke=0.25, color="white", aes(fill=Entity))+
-  stat_cor(aes(label=..r.label..),  size=2.25, label.y = 82)+
+  stat_cor(aes(label=..r.label..),  size=2.5, label.y = 82)+
   scale_fill_manual(values = colors_characteristics, name=NULL, limits=c("DLBCL", "FL", "MCL", "MZL"))+
   ylim(0,90)+
   ylab("T-cells in %")+
@@ -197,7 +198,7 @@ p6 <- ggplot(df_meta, aes(x=Entity, y=Tcells))+
   geom_boxplot(width=0.4, size=0.25)+
   ggbeeswarm::geom_beeswarm(size=0.75, shape=21, stroke=0.25, cex = 2.25, aes(fill=Entity))+
   stat_compare_means(data=df_tmp %>% filter(!Entity %in% c("rLN")), 
-                     label.y = 83, label.x = 2.5, size=2.25, hjust=0.5, bracket.size = 0.25)+
+                     label.y = 83, label.x = 2.5, size=2.5, hjust=0.5, bracket.size = 0.25)+
   scale_fill_manual(values = colors_characteristics, name=NULL, 
                     limits=c("DLBCL", "FL", "MCL", "MZL", "rLN"))+
   geom_segment(data = NULL, aes(x=1, xend=4, y=80, yend=80), size=0.1)+
@@ -218,7 +219,7 @@ wrap_plots(p1+labs(tag = "A")+p_ann+plot_layout(nrow = 2, heights = c(1, 0.5)))/
   wrap_plots(p2+p3+p5+p6+plot_layout(nrow = 1, widths = c(0.55,0.55,1,1)))+
   plot_layout(heights = c(1.25,0.075,0.7))
 
-#ggsave(width = 18.9, height = 12, units = "cm", filename = "SF1.pdf")
+#ggsave(width = 18.5, height = 12, units = "cm", filename = "SF1.pdf")
 
 ```
 
@@ -227,8 +228,7 @@ wrap_plots(p1+labs(tag = "A")+p_ann+plot_layout(nrow = 2, heights = c(1, 0.5)))/
 
 # Legend
 as_ggplot(legend1)+as_ggplot(legend2)+as_ggplot(legend3)+plot_layout(nrow = 1, widths = c(1, 0.5, 0.75))
-#ggsave(width = 11.5, height = 1, units = "cm", filename = "S1_p1_legend.pdf")
-
+ggsave(width = 13, height = 1, units = "cm", filename = "S1_p1_legend.pdf")
 
 ```
 
@@ -368,7 +368,7 @@ for(i in c(1:7)){
     ggbeeswarm::geom_beeswarm(data = function(x) dplyr::filter_(x, ~ outlier), cex = 3, stroke=0.25, 
                               groupOnX = TRUE, shape = 21, size = 1, color = "white", alpha = 1)+
     geom_text(data=df_freqPlot_pvalues %>% filter(IdentI %in% y), 
-              inherit.aes = F, aes(y=height, x=Entity, label=p.adj), hjust=0.1, size=2.2, angle=45)+
+              inherit.aes = F, aes(y=height, x=Entity, label=p.adj), hjust=0.1, size=2.5, angle=45)+
     scale_fill_manual(values = colors_umap_cl)+
     scale_y_continuous(name="% of total cells", limits=c(0,ylim[i]))+
     scale_x_discrete(expand = c(0.17,0.17))+
@@ -391,18 +391,11 @@ for(i in c(1:7)){
       theme(axis.title.y = element_blank())
     }
   
-  if(i==1){
-    p[[i]] <- p[[i]]+
-      labs(tag = "A")+
-      theme(plot.tag = element_text(vjust = -0.5))
-}
-  p[[i]]
-  
 }
 
 plot_freq <- wrap_plots(p, ncol = 2)
 plot_freq
-#ggsave(width = 19, height = 15, units = "cm", filename = "SF3.pdf")
+#ggsave(width = 18.5, height = 15, units = "cm", filename = "SF3.pdf")
 
 ```
 
@@ -518,7 +511,7 @@ plot_multi <- ggplot()+
              position = position_nudge(y=0.16))+
   geom_point(data=p.value %>% filter(Entity!="Overall"), aes(x=IdentI, y=Parameter, size=-log10(p.adj), fill=t.value, group=Entity), shape=21, stroke=0.25, 
              position = ggpp::position_dodgenudge(y = -0.14, width = 0.78))+
-  geom_text(data=p.value %>% filter(Entity=="Overall", p.adj<0.05), aes(x=IdentI, y=Parameter, label=round(p.adj, 3)), hjust=0.5, nudge_y = 0.4, size=2.25)+
+  geom_text(data=p.value %>% filter(Entity=="Overall", p.adj<0.05), aes(x=IdentI, y=Parameter, label=round(p.adj, 3)), hjust=0.5, nudge_y = 0.4, size=2.5)+
   geom_text(data=p.value %>% filter(Entity=="Overall", p.adj<0.05), aes(x=IdentI, y=Parameter, label=sign), hjust=0.5, nudge_y = 0.18, size=2.5)+
   geom_text(data=p.value %>% filter(Entity!="Overall"), aes(x=IdentI, y=Parameter, label=sign, group=Entity), size=2.5, 
              position = ggpp::position_dodgenudge(y = -0.11, width = 0.78))+
@@ -547,9 +540,9 @@ plot_multi <- ggplot()+
         axis.text.y = element_markdown(hjust = 1,  lineheight = 1.2))+
   labs(tag = "B")
 
-plot_coefs+labs(tag = "A")+plot_multi+plot_layout(heights = c(1,1))
+plot_coefs+labs(tag = "A")+plot_multi+plot_layout(heights = c(1.2,1))
 
-#ggsave(width = 19, height = 15, units = "cm", filename = "SF4.pdf")
+ggsave(width = 18, height = 15, units = "cm", filename = "SF4.pdf")
 
 ```
 
@@ -593,7 +586,7 @@ cor_plots_prime[["TFH"]] <-
   geom_point(color=colors_umap_cl[["6"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["6"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,60), breaks = c(0, 20, 40, 60))+
   scale_y_continuous(limits = c(0,60), breaks = c(0, 20, 40, 60))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -609,7 +602,7 @@ cor_plots_prime[["TPR"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["14"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["14"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,12), breaks = c(0, 4, 8, 12))+
   scale_y_continuous(limits = c(0,12), breaks = c(0, 4, 8, 12))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -626,7 +619,7 @@ cor_plots_prime[["TDN"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["19"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["19"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,8), breaks = c(0, 2, 4, 6, 8))+
   scale_y_continuous(limits = c(0,8), breaks = c(0, 2, 4, 6, 8))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -642,7 +635,7 @@ cor_plots_prime[["THCM2"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["9"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["9"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,15), breaks = c(0, 5, 10, 15))+
   scale_y_continuous(limits = c(0,15), breaks = c(0, 5, 10, 15))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -658,7 +651,7 @@ cor_plots_prime[["THCM1"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["2"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["2"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
   scale_y_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -675,7 +668,7 @@ cor_plots_prime[["THNaive"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["1"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["1"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45))+
   scale_y_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -691,7 +684,7 @@ cor_plots_prime[["TREGCM1"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["8"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["8"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
   ggtitle(labels_cl[["8"]])+
     scale_x_continuous(limits = c(0,25), breaks = c(0, 8, 16, 24))+
@@ -707,7 +700,7 @@ cor_plots_prime[["TREGEM2"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["11"]],size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["11"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,16), breaks = c(0, 5, 10, 15))+
   scale_y_continuous(limits = c(0,16), breaks = c(0, 5, 10, 15))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -723,7 +716,7 @@ cor_plots_prime[["TREGEM1"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["15"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["15"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
   scale_y_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -741,7 +734,7 @@ cor_plots_prime[["TREGCM2"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["13"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["13"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
   scale_y_continuous(limits = c(0,20), breaks = c(0, 6, 12, 18))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -757,7 +750,7 @@ cor_plots_prime[["TTOXNaive"]] <-df_freq_prime %>%
   geom_point(color=colors_umap_cl[["12"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["12"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,27), breaks = c(0, 8, 16, 24))+
   scale_y_continuous(limits = c(0,27), breaks = c(0, 8, 16, 24))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -773,7 +766,7 @@ cor_plots_prime[["TTOXEM3"]] <- df_freq_prime %>%
   geom_point(color="#b50923", size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color="#b50923", se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
   scale_y_continuous(limits = c(0,80), breaks = c(0, 25, 50, 75))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -789,7 +782,7 @@ cor_plots_prime[["TTOXEM1"]] <- df_freq_prime %>%
   geom_point(color="#fea044", size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x,na.rm = T,
               color="#fea044", se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,50), breaks = c(0, 15, 30, 45))+
   scale_y_continuous(limits = c(0,50), breaks = c(0, 15, 30, 45))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -805,7 +798,7 @@ cor_plots_prime[["TTOXEM2"]] <- df_freq_prime %>%
   geom_point(color=colors_umap_cl[["16"]], size=0.65, alpha=0.75)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_umap_cl[["16"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson",size=2.25, label.x.npc = c(0.45), label.y.npc = c(0.9))+
+  stat_cor(aes(label=..r.label..), method = "pearson",size=2.5, label.x.npc = c(0.45), label.y.npc = c(0.9))+
   scale_x_continuous(limits = c(0,15), breaks = c(0, 4, 8, 12))+
   scale_y_continuous(limits = c(0,15), breaks = c(0, 4, 8, 12))+
   labs(x="3' scRNA - %", y="5' scRNA - %")+
@@ -916,7 +909,7 @@ plot_expr2 <- ggplot()+
 cor_plots_prime_all/wrap_plots(plot_expr1+plot_spacer()+plot_expr2+plot_layout(widths = c(1,0.1,1)))+
   plot_layout(heights = c(1.6,1))
 
-#ggsave(width = 19, height = 12.5, units = "cm", filename = "SF5.pdf")
+#ggsave(width = 18.5, height = 12.5, units = "cm", filename = "SF5.pdf")
 
 ```
 
@@ -925,7 +918,7 @@ cor_plots_prime_all/wrap_plots(plot_expr1+plot_spacer()+plot_expr2+plot_layout(w
 ```{r TCR diversity read}
 
 # Single cell T-cell receptor data read by immunarch package
-# Can be downloaded at HeiData database (https://heidata.uni-heidelberg.de) under accession number 0SNSFB 
+# RNA–seq, epitope and TCR raw and processed data have been deposited in the Gene Expression Omnibus (GEO) under accession codes GSE252608 and GSE252455.
 DF_immunarchTCR <- repLoad(list.files(path = "countMatrices", pattern = "TCRrep", full.names = T))
 DF_immunarchTCR$meta$Sample <- strsplit(DF_immunarchTCR$meta$Sample, split = "_") %>% sapply("[[", 1)
 names(DF_immunarchTCR$data) <- DF_immunarchTCR$meta$Sample
@@ -1021,9 +1014,9 @@ plot_rare <-
   labs(tag = "D")
 
 plot_rare+wrap_plots((plots$LN0132+theme(axis.title.x = element_blank())+labs(tag = "E"))/plots$LN0217+labs(tag = "F"))+
-  plot_layout(widths = c(1,1.75))
+  plot_layout(widths = c(1,1.7))
   
-#ggsave(width = 19, height = 8, units = "cm", filename = "SF5.pdf")
+#ggsave(width = 18, height = 8, units = "cm", filename = "SF5.pdf")
 
 ```
 
@@ -1212,20 +1205,20 @@ p5 <- df_mut %>%
   geom_vline(xintercept = 1.5, color="black", size=0.25)+
   geom_segment(data=data.frame(y=seq(1.5, 42.5,1)), inherit.aes = F, 
                aes(y = y, yend = y, x=0.05, xend=2.8), color="white", size=0.25)+
-  geom_text(data = p.values, inherit.aes = F, aes(y=Name, x=2.8, label=round(p, 2)), size=2.25)+
+  geom_text(data = p.values, inherit.aes = F, aes(y=Name, x=2.8, label=round(p, 2)), size=2.5)+
   facet_wrap(~Group, ncol=3, scales = "free_y")+
   ggtitle("Mutations")+
   coord_cartesian(clip = "off")+
   mytheme_1+
   theme(strip.background = element_blank(),
         strip.text = element_blank(),
-        axis.text.x = element_text(angle=45, hjust=1, size=6.5),
+        axis.text.x = element_text(angle=45, hjust=1, size=7),
         axis.ticks = element_blank(),
-        axis.text.y = element_text(size=6.25, margin = unit(c(0,-0.4,0,0), units = "cm")),
+        axis.text.y = element_text(size=7, margin = unit(c(0,-0.4,0,0), units = "cm")),
         plot.margin = unit(units = "cm", c(0,1.25,0,0)),
         axis.title = element_blank(),
         panel.border = element_blank())+
-  labs(tag = "D")
+  labs(tag = "E")
 
 ```
 
@@ -1252,19 +1245,19 @@ p6 <- df_gain %>%
   geom_vline(xintercept = 1.5, color="black", size=0.25)+
   geom_segment(data=data.frame(y=seq(1.5, 31.5,1)), inherit.aes = F, 
                aes(y = y, yend = y, x=0.25, xend=2.8), color="white", size=0.25)+
-  geom_text(data = p.values, inherit.aes = F, aes(y=Name, x=2.8, label=round(p, 2)), size=2.25)+
+  geom_text(data = p.values, inherit.aes = F, aes(y=Name, x=2.8, label=round(p, 2)), size=2.5)+
   coord_cartesian(clip = "off")+
   ggtitle("CN gain")+
   mytheme_1+
   theme(strip.background = element_blank(),
         strip.text = element_blank(),
-        axis.text.x = element_text(angle=45, hjust=1, size=6.5),
+        axis.text.x = element_text(angle=45, hjust=1, size=7),
         axis.ticks = element_blank(),
-        axis.text.y = element_text(size=6.25, margin = unit(c(0,-0.15,0,0), units = "cm")),
+        axis.text.y = element_text(size=7, margin = unit(c(0,-0.15,0,0), units = "cm")),
         plot.margin = unit(units = "cm", c(0,1.25,0,0)),
         axis.title = element_blank(),
         panel.border = element_blank())+
-  labs(tag = "E")
+  labs(tag = "F")
 
 ```
 
@@ -1292,18 +1285,18 @@ p7 <- df_loss %>%
   geom_vline(xintercept = 1.5, color="black", size=0.25)+
    geom_segment(data=data.frame(y=seq(1.5, 32.5,1)), inherit.aes = F, 
                aes(y = y, yend = y, x=0.25, xend=2.8), color="white", size=0.25)+
-  geom_text(data = p.values, inherit.aes = F, aes(y=Name, x=2.8, label=round(p, 2)), size=2.25)+
+  geom_text(data = p.values, inherit.aes = F, aes(y=Name, x=2.8, label=round(p, 2)), size=2.5)+
   ggtitle("CN loss")+
     coord_cartesian(clip = "off")+
   mytheme_1+
   theme(strip.background = element_blank(),
         strip.text = element_blank(),
-        axis.text.x = element_text(angle=45, hjust=1, size=6.5),
+        axis.text.x = element_text(angle=45, hjust=1, size=7),
         axis.ticks = element_blank(),
-        axis.text.y = element_text(size=6.25, margin = unit(c(0,-0.15,0,0), units = "cm")),
+        axis.text.y = element_text(size=7, margin = unit(c(0,-0.15,0,0), units = "cm")),
         axis.title = element_blank(),
         panel.border = element_blank())+
-  labs(tag = "F")
+  labs(tag = "G")
 
 ```
 
@@ -1335,13 +1328,13 @@ p8 <- df_struct %>%
   mytheme_1+
   theme(strip.background = element_blank(),
         strip.text = element_blank(),
-        axis.text.x = element_text(angle=45, hjust=1, size=6.5),
+        axis.text.x = element_text(angle=45, hjust=1, size=7),
         axis.ticks = element_blank(),
-        axis.text.y = element_text(size=6.25, margin = unit(c(0,-0.15,0,0), units = "cm")),
+        axis.text.y = element_text(size=7, margin = unit(c(0,-0.15,0,0), units = "cm")),
         plot.margin = unit(units = "cm", c(0,1.25,0,0)),
         axis.title = element_blank(),
         panel.border = element_blank())+
-  labs(tag = "G")
+  labs(tag = "H")
 
 ```
 
@@ -1352,7 +1345,7 @@ p8 <- df_struct %>%
 p5+wrap_plots(p6/p8+plot_layout(heights = c(2,0.5)))+(p7/plot_spacer()+plot_layout(heights = c(2,0.5)))+
   plot_layout(nrow = 1, widths = c(2.9,1,1))
 
-#ggsave(width = 19, height = 14, units = "cm", filename = "SF6_p2.pdf")
+#ggsave(width = 18, height = 14, units = "cm", filename = "SF6_p2.pdf")
 
 ```
 
@@ -1364,7 +1357,7 @@ as_ggplot(get_legend(p8+guides(fill=guide_colorbar(nrow = 2, title = "Exhausted\
                              legend.key.height = unit(units = "cm", 0.3),
                              legend.key.width = unit(units = "cm", 0.3))))
 
-#ggsave(width = 2, height = 2.4, units = "cm", filename = "SF6_legend.pdf")
+ggsave(width = 2, height = 2.4, units = "cm", filename = "SF6_legend.pdf")
 
 ```
 
@@ -1392,7 +1385,7 @@ plot_aiolos <- df_ikzf3 %>%
   geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
   ggbeeswarm::geom_beeswarm(size=0.75, shape=21, stroke=0.25, cex = 2.25, aes(fill=Entity))+
   geom_text(inherit.aes = F, data = pvalues %>% mutate(Y=c(75, 75)),
-            aes(x=Entity, y=Y, label=p), size=2.25, check_overlap = T)+
+            aes(x=Entity, y=Y, label=p), size=2.5, check_overlap = T)+
   scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
   scale_y_continuous(limits = c(0,80), name=expression('% IKZF3'^'+'~'of FoxP3'^'+'))+
   scale_x_discrete(limits=c("rLN", "DLBCL", "MCL", "FL", "MZL"))+
@@ -1401,11 +1394,11 @@ plot_aiolos <- df_ikzf3 %>%
   theme(legend.position = "none",
         strip.background = element_rect(color=NA),
         axis.title.x = element_blank(),
-        plot.title = element_text(face = "plain", size=6),
+        plot.title = element_text(face = "plain", size=7),
         panel.border = element_rect(size=0.5),
-        axis.text.x = element_text(angle=45, hjust = 1, size=6),
-        axis.text.y = element_text(size=6),
-        axis.title.y = element_text(size=6),
+        axis.text.x = element_text(angle=45, hjust = 1, size=7),
+        axis.text.y = element_text(size=7),
+        axis.title.y = element_text(size=7),
         panel.background = element_rect(fill=NA),
         plot.margin = unit(c(0,0.25,0,0.25), "cm"))
 
@@ -1453,15 +1446,15 @@ treg_shared[[i]] <- ggplot()+
   mytheme_1+
   theme(legend.position = "right",
         panel.border = element_rect(size=0.25),
-        plot.title = element_textbox_simple(size=6, width = NULL, face = "plain",
+        plot.title = element_textbox_simple(size=7, width = NULL, face = "plain",
                                             padding = margin(1.25, 0, 1, 0),
                                             lineheight = 1.25,
                                             halign=0.5),
-        legend.text = element_text(size=6),
+        legend.text = element_text(size=7),
         legend.spacing.x = unit("cm", x = 0.13),
-        axis.title.x = element_text(size=6),
-        axis.title.y = element_text(size=6),
-        axis.text = element_text(size=6),
+        axis.title.x = element_text(size=7),
+        axis.title.y = element_text(size=7),
+        axis.text = element_text(size=7),
         legend.spacing.y = unit("cm", x = 0.001),
         legend.key.width = unit("cm", x = 0.05),
         legend.key.height = unit("cm", x = 0.5),
@@ -1501,6 +1494,7 @@ kmplot_tfh$plot$plot_env$legend <- c(0.32, 0.2)
 kmplot_tfh$plot$theme$legend.position <- c(0.32, 0.2)
 kmplot_tfh$plot$theme$legend.background$fill <- NA
 kmplot_tfh$plot$theme$legend.text$colour <- NA
+kmplot_tfh$plot$theme$legend.text$size <- 7
 kmplot_tfh$plot <- kmplot_tfh$plot+annotation_custom(grob = textGrob(label = expression('T'[FH]~'High'), gp = gpar(cex=0.5), x=0.36, y=0.215))+
   annotation_custom(grob = textGrob(label = expression('T'[FH]~'Low'), gp = gpar(cex=0.5), x=0.36, y=0.125))+
   labs(tag = "D")
@@ -1510,6 +1504,7 @@ kmplot_treg$plot$plot_env$legend <- c(0.32, 0.2)
 kmplot_treg$plot$theme$legend.position <- c(0.32, 0.2)
 kmplot_treg$plot$theme$legend.background$fill <- NA
 kmplot_treg$plot$theme$legend.text$colour <- NA
+kmplot_tfh$plot$theme$legend.text$size <- 7
 kmplot_treg$plot <- kmplot_treg$plot+annotation_custom(grob = textGrob(label = expression('T'[REG]~'EM'[2]~'High'), gp = gpar(cex=0.5), x=0.36, y=0.215))+
   annotation_custom(grob = textGrob(label = expression('T'[REG]~'EM'[2]~'Low'), gp = gpar(cex=0.5), x=0.36, y=0.125))+
   labs(tag = "E")
@@ -1524,7 +1519,7 @@ plot_treg/
   wrap_plots(kmplot_tfh$plot+kmplot_treg$plot+plot_spacer())+
   plot_layout(heights = c(1.2,1))
 
-#ggsave(width = 19, height = 11, units = "cm", filename = "SF7.pdf")
+#ggsave(width = 18, height = 11, units = "cm", filename = "SF7.pdf")
 
 ```
 
@@ -1583,7 +1578,7 @@ ggraph(mygraph_codex, layout = 'tree', circular = FALSE) +
   theme(plot.margin = unit(c(-0.5,0.35,0.25,0.25), units = "cm"),
         plot.title = element_text(hjust = 0.4, vjust=-7.5, size=7))
 
-#ggsave(filename = "Figure8_p2.pdf", width = 13, height = 4.25, units = "cm")
+#ggsave(filename = "Figure8_p2.pdf", width = 12.6, height = 4.25, units = "cm")
 
 ```
 
@@ -1745,7 +1740,7 @@ cor_plots_codex[["TFH"]] <-
   geom_point(fill=colors_codex[["TFH"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_codex[["TFH"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.5), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,40), breaks = c(0, 12, 24, 36), name = "mIF")+
   scale_y_continuous(limits = c(0,40), breaks = c(0, 12, 24, 36), name = "CITE-seq")+
   labs(title="T<sub>FH</sub>")+
@@ -1760,7 +1755,7 @@ cor_plots_codex[["TREG"]] <-
   geom_point(fill=colors_codex[["Treg"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color="black", se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.5), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,56), breaks = c(0, 16, 32, 48), name = "mIF")+
   scale_y_continuous(limits = c(0,56), breaks = c(0, 16, 32, 48), name = "CITE-seq")+
   labs(title="T<sub>REG</sub>")+
@@ -1775,7 +1770,7 @@ cor_plots_codex[["TTOXNaive"]] <-
   geom_point(fill=colors_codex[["TTOXNaive"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_codex[["TTOXNaive"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.5), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,13), breaks = c(0, 4, 8, 12), name = "mIF")+
   scale_y_continuous(limits = c(0,13), breaks = c(0, 4, 8, 12), name = "CITE-seq")+
   labs(title="CD8<sup>+</sup> Naive")+
@@ -1790,7 +1785,7 @@ cor_plots_codex[["THNaive"]] <-
   geom_point(fill=colors_codex[["CD4TNaive"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_codex[["CD4TNaive"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.53), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,30), breaks = c(0, 10, 20, 30), name = "mIF")+
   scale_y_continuous(limits = c(0,30), breaks = c(0, 10, 20, 30), name = "CITE-seq")+
   labs(title="CD4<sup>+</sup> Naive")+
@@ -1807,7 +1802,7 @@ cor_plots_codex[["TPR"]] <-
   geom_point(fill=colors_codex[["TPR"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_codex[["TPR"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.93))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.5), label.y.npc = c(0.93))+
   scale_x_continuous(limits = c(0,13), breaks = c(0, 4, 8, 12), name = "mIF")+
   scale_y_continuous(limits = c(0,13), breaks = c(0, 4, 8, 12), name = "CITE-seq")+
   labs(title="T<sub>Pr</sub>")+
@@ -1825,7 +1820,7 @@ cor_plots_codex[["TH"]] <-
   geom_point(fill=colors_codex[["CD4T"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_codex[["CD4T"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.93))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.5), label.y.npc = c(0.93))+
   scale_x_continuous(limits = c(0,60), breaks = c(0, 20, 40, 60), name = "mIF")+
   scale_y_continuous(limits = c(0,60), breaks = c(0, 20, 40, 60), name = "CITE-seq")+
   labs(title="Memory T<sub>H</sub>")+
@@ -1840,7 +1835,7 @@ cor_plots_codex[["TTOX"]] <-
   geom_point(fill=colors_codex[["TTOX"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_codex[["TTOX"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.5), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45), name = "mIF")+
   scale_y_continuous(limits = c(0,45), breaks = c(0, 15, 30, 45), name = "CITE-seq")+
   labs(title="Memory T<sub>TOX</sub>")+
@@ -1856,7 +1851,7 @@ cor_plots_codex[["TTOX_exh"]] <-
   geom_point(fill=colors_codex[["TTOX_exh"]], size=1, alpha=0.75, shape=21, stroke=0.1)+
   geom_smooth(method = "lm", linetype="dashed", size=0.25, formula = y ~ x, na.rm = T,
               color=colors_codex[["TTOX_exh"]], se=F, fullrange=T)+
-  stat_cor(aes(label=..r.label..), method = "pearson", size=2.25, label.x.npc = c(0.53), label.y.npc = c(0.1))+
+  stat_cor(aes(label=..r.label..), method = "pearson", size=2.5, label.x.npc = c(0.5), label.y.npc = c(0.1))+
   scale_x_continuous(limits = c(0,65), breaks = c(0, 20, 40, 60), name = "mIF")+
   scale_y_continuous(limits = c(0,65), breaks = c(0, 20, 40, 60), name = "CITE-seq")+
   labs(title="PD1<sup>+</sup> TIM3<sup>+</sup> T<sub>TOX</sub>")+
@@ -1879,7 +1874,7 @@ p_full <- wrap_plots(p2/p3+plot_layout(heights = c(1.25,1)))+wrap_plots(cor_plot
   plot_layout(ncol = 2))+
   plot_layout(widths = c(2.25,1.15))
 p_full
-#ggsave(p_full, width = 19, height = 14, units = "cm", filename = "SF8.pdf")
+#ggsave(p_full, width = 18, height = 14, units = "cm", filename = "SF8.pdf")
 
 
 ```
@@ -2029,7 +2024,7 @@ p_full <-
 
 p_full
 
-#ggsave(p_full, width = 19, height = 11.5, units = "cm", filename = "SF11.pdf")
+#ggsave(p_full, width = 18, height = 11.5, units = "cm", filename = "SF11.pdf")
 
 ```
 
@@ -2111,7 +2106,7 @@ df_freq_nh %>%
              size=0.25, linetype="dashed", color="grey60")+
   geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
   ggbeeswarm::geom_beeswarm(size=1, shape=21, stroke=0.1, cex = 2, aes(fill=Region))+
-  geom_text(data=pvalues, inherit.aes = F, aes(y=Max, x=Entity, label=p.adj), size=2.25)+
+  geom_text(data=pvalues, inherit.aes = F, aes(y=Max, x=Entity, label=p.adj), size=2.5)+
   scale_fill_manual(values = colors_nn)+
   scale_x_discrete(limits=c("rLN", "DLBCL", "MCL", "FL", "MZL"))+
   facet_wrap(~Region_label, strip.position = "top", scales = "free_y", nrow = 2)+
@@ -2121,10 +2116,10 @@ df_freq_nh %>%
         axis.text.x = element_text(angle=45, hjust=1),
         axis.title.x = element_blank(),
         strip.background = element_blank(),
-        plot.margin = unit(c(0,0,0,0.1), "cm"))+
+        plot.margin = unit(c(0,0.1,0,0.1), "cm"))+
   labs(tag = "F")
 
-#ggsave(width = 19, height = 7, units = "cm", filename = "SF10.pdf")
+#ggsave(width = 18, height = 7, units = "cm", filename = "SF10.pdf")
 
 ```
 

@@ -93,9 +93,9 @@ p1 <- ggplot()+
   coord_cartesian(clip = "off")+
   theme(legend.box.margin = unit(c(0,-0.25,-0.35,-0.25), units = "cm"),
         panel.border = element_rect(size=0.25, color="black"),
-        legend.title = element_text(size=6),
-        legend.text = element_text(size=6),
-        legend.position = c(0.90,0.25),
+        legend.title = element_text(size=7),
+        legend.text = element_text(size=7),
+        legend.position = c(0.88,0.25),
         panel.background = element_rect(fill=NA),
         strip.background = element_rect(color=NA),
         legend.key.height = unit(units="cm", 0.15),
@@ -137,9 +137,9 @@ df_tmp2 <- df_tmp516 %>% filter(avg_log2FC>0)
 p3 <- ggplot()+
   geom_point(data=df_tmp1, aes(x=avg_log2FC, y=power, color=Assay), alpha=ifelse(!is.na(df_tmp1$Label), 1, 0.25), stroke=0, size=1)+
   geom_point(data=df_tmp2, aes(x=avg_log2FC, y=power, color=Assay), alpha=ifelse(!is.na(df_tmp2$Label), 1, 0.25), stroke=0, size=1)+
-  ggrepel::geom_text_repel(data=df_tmp1, aes(x=avg_log2FC, y=power, color=Assay, label=Label), show.legend = F, size=2.25, segment.size=0.25, xlim = c(-1.9, -2.5), ylim = c(0.75,0.85), seed = 1)+
-  ggrepel::geom_text_repel(data=df_tmp2 %>% filter(Feature==".CD366"), aes(x=avg_log2FC, y=power, color=Assay, label=Label), show.legend = F, size=2.25, segment.size=0.25, seed = 2, xlim = c(0.5,0.6),)+
-  ggrepel::geom_text_repel(data=df_tmp2 %>% filter(Feature!=".CD366"), aes(x=avg_log2FC, y=power, color=Assay, label=Label), show.legend = F, size=2.25, segment.size=0.25, ylim = c(0.62, 0.9), seed = 1)+
+  ggrepel::geom_text_repel(data=df_tmp1, aes(x=avg_log2FC, y=power, color=Assay, label=Label), show.legend = F, size=2.4, segment.size=0.25, xlim = c(-1.9, -2.5), ylim = c(0.75,0.85), seed = 1)+
+  ggrepel::geom_text_repel(data=df_tmp2 %>% filter(Feature==".CD366"), aes(x=avg_log2FC, y=power, color=Assay, label=Label), show.legend = F, size=2.4, segment.size=0.25, seed = 2, xlim = c(0.5,0.6),)+
+  ggrepel::geom_text_repel(data=df_tmp2 %>% filter(Feature!=".CD366"), aes(x=avg_log2FC, y=power, color=Assay, label=Label), show.legend = F, size=2.4, segment.size=0.25, ylim = c(0.62, 0.9), seed = 1)+
   geom_vline(xintercept = 0, linetype="dashed", size=0.25)+
   scale_color_manual(name=NULL, values = c("black", "#f1a340"))+
   scale_x_continuous(limits = c(-3.2, 3.2), expand = c(0,0), name=expression('log'[2]~'fold change'))+
@@ -194,7 +194,7 @@ p4 <- FetchData(ttox, slot = "data", vars = c(marker_full, "integratedadt_.CD4",
   scale_y_continuous(name="Protein / RNA / TF level", breaks = c(0,0.5,1.0))+
   scale_x_continuous(name="Pseudotime", breaks = c(0, 10, 20, 30))+
   mytheme_1+
-  theme(strip.text = element_text(angle = 0, size=6),
+  theme(strip.text = element_text(angle = 0, size=7),
         panel.border = element_rect(size=0.5),
         plot.tag = element_text(margin = unit(c(0,0,-0.2,0), "cm")),
         plot.margin = unit(c(-0.2,0,-0.25,0.1), "cm"))
@@ -230,7 +230,7 @@ p5 <- FetchData(ttox, slot = "data", vars = c(marker_full, "integratedadt_.CD4",
   scale_y_continuous(name="Protein / RNA expression level", breaks = c(0,0.5,1.0))+
   scale_x_continuous(name="Pseudotime", breaks = c(0, 10, 20, 30))+
   mytheme_1+
-  theme(strip.text = element_text(angle = 0, size=6),
+  theme(strip.text = element_text(angle = 0, size=7),
         axis.title.y = element_blank(),
         panel.border = element_rect(size=0.5),
         axis.ticks.y = element_blank(),
@@ -269,7 +269,7 @@ p6 <- FetchData(ttox, slot = "data", vars = c(marker_full,
   scale_y_continuous(name="RNA level", breaks = c(0,0.5,1.0))+
   scale_x_continuous(name="Pseudotime", breaks = c(0, 10, 20, 20, 30))+
   mytheme_1+
-  theme(strip.text = element_text(angle = 0, size=6, face="italic"),
+  theme(strip.text = element_text(angle = 0, size=7, face="italic"),
         axis.title.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
@@ -308,7 +308,7 @@ p7 <- FetchData(ttox, slot = "data", vars = c(marker_full, "integratedadt_.CD4",
   facet_wrap(~name, strip.position="top", ncol = 1)+
   scale_x_continuous(name="Pseudotime", breaks = c(0, 10, 20, 20, 30))+
   mytheme_1+
-  theme(strip.text = element_text(angle = 0, size=6),
+  theme(strip.text = element_text(angle = 0, size=7),
         axis.title.y = element_blank(),
         axis.ticks.y = element_blank(),
         panel.border = element_rect(size=0.5),
@@ -341,8 +341,8 @@ p8 <- ggplot()+
   geom_vline(xintercept = 24, linetype="dashed", size=0.25)+
   geom_density(data = df, aes(x=Pseudotime, group=PatientID, color=Entity), alpha=0.25, show.legend = F, adjust=1.6, size=0.25)+
    scale_color_brewer(palette = "Paired", limits=c( "DLBCL", "MCL", "FL", "MZL", "rLN"))+
-  geom_text(data = data.frame(Entity=c("rLN", "DLBCL", "MCL", "FL", "MZL")), aes(label=Entity, x=0, y=0.2), size=2.25, hjust=0, check_overlap = T)+
-  geom_text(data=term_exh, aes(x=28.3, y=0.2, label=paste0(MeanProp, "%")), hjust=0.5, size=2.25)+
+  geom_text(data = data.frame(Entity=c("rLN", "DLBCL", "MCL", "FL", "MZL")), aes(label=Entity, x=0, y=0.2), size=2.5, hjust=0, check_overlap = T)+
+  geom_text(data=term_exh, aes(x=28.3, y=0.2, label=paste0(MeanProp, "%")), hjust=0.5, size=2.5)+
   facet_wrap(~Entity, ncol = 1)+
   scale_y_continuous(limits=c(-0.015,0.22), breaks = c(0, 0.1, 0.2), name="Density")+
   annotation_custom(rasterGrob(t(viridis(n=100, direction = -1, option = "viridis")), width=unit(1,"npc"), height=unit(1,"npc")), 
@@ -383,7 +383,7 @@ fit <- survfit(Surv(time_pfs, status_pfs) ~ Factor, data = df_surv)
 
 p10 <- ggsurvplot(fit, data = df_surv, 
            pval = TRUE, 
-           pval.size = 2,
+           pval.size = 2.5,
            censor.size=2,
            size=0.25,
            pval.coord = c(5.5, 0.95),
@@ -393,10 +393,10 @@ p10 <- ggsurvplot(fit, data = df_surv,
            legend.labs = c("Exhaustion High", "Exhaustion Low"),
            legend.title = "", 
            legend = c(0.3,0.2),
-           fontsize = 2,
+           fontsize = 2.5,
            title="Chapuy et al. 2018 (DLBCL)",
            ggtheme = mytheme_1+theme(plot.title = element_text(hjust = 0.5, size=7, face = "plain"),
-                                     legend.text = element_text(size=5),
+                                     legend.text = element_text(size=7),
                                      panel.border = element_rect(size=0.5),
                                      legend.key.height = unit(units = "cm", 0.3),
                                      legend.margin = margin(c(0,0,0,0), unit = "cm"),
@@ -425,7 +425,7 @@ fit <- survfit(Surv(time_pfs, status_pfs) ~ Factor, data = df_surv)
 
 p11 <- ggsurvplot(fit, data = df_surv, 
            pval = TRUE, 
-           pval.size = 2,
+           pval.size = 2.5,
            censor.size=2,
            size=0.25,
            pval.coord = c(8.5, 0.95),
@@ -435,10 +435,10 @@ p11 <- ggsurvplot(fit, data = df_surv,
            legend.labs = c("Exhaustion High", "Exhaustion Low"),
            legend.title = "", 
            legend = c(0.3,0.2),
-           fontsize = 2,
+           fontsize = 2.5,
            title="Schmitz et al. 2018 (DLBCL)",
            ggtheme = mytheme_1+theme(plot.title = element_text(hjust = 0.5, size=7, face = "plain"),
-                                     legend.text = element_text(size=5),
+                                     legend.text = element_text(size=7),
                                      panel.border = element_rect(size=0.5),
                                      legend.key.height = unit(units = "cm", 0.3),
                                      legend.margin = margin(c(0,0,0,0), unit = "cm"),
@@ -453,7 +453,8 @@ p11 <- ggsurvplot(fit, data = df_surv,
 
 p12 <- readRDS("data/SurvPlot_Ttox_Gallium.rds")
 p12$plot$plot_env$legend <- c(0.3, 0.2)
-p12$plot$theme$legend.position <- c(0.3, 0.2)
+p12$plot$theme$legend.position <- c(0.35, 0.2)
+p12$plot$theme$legend.text$size <- 7
 
 ```
 
@@ -474,7 +475,7 @@ p_full_p2 <- wrap_plots(p10$plot+labs(tag = "E")+p11$plot+labs(tag = "F")+p12$pl
 p_full <- p_full_p1/p_full_p2+plot_layout(heights = c(13.5,5))
 p_full
 
-#ggsave(width = 19, height = 17.5, units = "cm", filename = "Figure5.pdf")
+#ggsave(width = 18.6, height = 17.5, units = "cm", filename = "Figure5.pdf")
 
 ```
 

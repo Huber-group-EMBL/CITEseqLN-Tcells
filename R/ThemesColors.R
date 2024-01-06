@@ -27,16 +27,16 @@ mytheme_codex <- theme_void()+
 theme_axis_sub <- theme(
   plot.margin = unit(c(0,0.25,0.18,0), units = "cm"),
   plot.title = element_text(vjust = -1),
-  axis.title.x = element_textbox_simple(size = 6,
+  axis.title.x = element_textbox_simple(size = 7,
     width = NULL,
     padding = margin(1.25, 0, 2.25, 0),
     lineheight = 1.25,
     halign=0.5),
-  axis.title.y = element_textbox_simple(size = 6,
+  axis.title.y = element_textbox_simple(size = 7,
     width = NULL,
     orientation = "left-rotated",
     padding = margin(0, 0, 1.25, 0)),
-  axis.text = element_text(size=6, color="black")
+  axis.text = element_text(size=7, color="black")
 )
 
 theme_axis_sub3 <- theme(

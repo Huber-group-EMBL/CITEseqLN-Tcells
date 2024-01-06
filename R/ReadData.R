@@ -1,5 +1,5 @@
 # Reference CITE-seq data
-# Can be downloaded at HeiData database
+# RNA–seq, epitope and TCR raw and processed data have been deposited in the Gene Expression Omnibus (GEO) under accession codes GSE252608 and GSE252455.
 # Or reproduced by IntegrateTcells.Rmd
 Combined_T <- readRDS("output/Tcells_Integrated.rds") 
 
@@ -57,7 +57,7 @@ df_snvs_chapuy <- read.delim("data/SomaticVariants_Chapuy2018.txt", na.strings =
   drop_na()
 
 # Single cell T-cell receptor data
-# Can be downloaded at HeiData database (https://heidata.uni-heidelberg.de) under accession number 0SNSFB 
+# RNA–seq, epitope and TCR raw and processed data have been deposited in the Gene Expression Omnibus (GEO) under accession codes GSE252608 and GSE252455.
 DF_TCRrep <- readTCR(list.files(path = "countMatrices", pattern = "TCRrep", full.names = T))
 
 # Read CODEX data (only meta data) 
