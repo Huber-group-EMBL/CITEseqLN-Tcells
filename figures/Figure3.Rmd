@@ -69,17 +69,23 @@ df_medianLines <- df_freqPlot %>%
   group_by(IdentI, Label) %>% 
   summarise(MedianProp=median(Prop))
 
-df_freqPlot_pvalues <- df_freqPlot %>% 
+df_freqPlot_pvalues <- 
+  df_freqPlot %>% 
   group_by(IdentI) %>% 
   wilcox_test(data=., formula = Prop ~ Entity, detailed = T, ref.group = "rLN") %>% 
   adjust_pvalue(method = "BH") %>% 
   select(IdentI, Entity=group2, p.adj, estimate) %>% 
   mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
   mutate(p.adj=ifelse(p.adj>0.05, NA, p.adj)) %>% 
-  mutate(p.adj=ifelse(p.adj<0.01, "< 0.01", round(p.adj, 2))) %>% 
+  mutate(p.adj_s=format(p.adj, scientific = TRUE, digits=1)) %>% 
+  mutate(p.adj_f=case_when(p.adj > 0.05 ~ "NA",
+                           p.adj==0.05 ~ "0.05",
+                           p.adj < 0.05 & p.adj > 0.001 ~ as.character(round(p.adj, 3)),
+                           p.adj==0.001 ~ "0.001",
+                           p.adj < 0.001 ~ p.adj_s)) %>% 
   filter(!is.na(p.adj)) %>% 
   left_join(., df_freqPlot %>% select(IdentI,  Label) %>% distinct) %>% 
-  left_join(., data.frame(IdentI=factor(cl_order), height=c(50, 50, 21, 21, 22, 22, 18, 18, 24, 24, 75, 75, 19, 19)))
+  left_join(., data.frame(IdentI=factor(cl_order), height=c(52.5, 52.5, 21.5, 21.5, 22, 22, 20, 20, 26, 26, 80, 80, 21, 21)))
 
 ```
 
@@ -104,7 +110,7 @@ for(i in c(1:7)){
     ggbeeswarm::geom_beeswarm(data = function(x) dplyr::filter_(x, ~ outlier), cex = 3, stroke=0.25, 
                               groupOnX = TRUE, shape = 21, size = 1, color = "white", alpha = 1)+
     geom_text(data=df_freqPlot_pvalues %>% filter(IdentI %in% y), 
-              inherit.aes = F, aes(y=height, x=Entity, label=p.adj), hjust=0.1, size=2.3, angle=45)+
+              inherit.aes = F, aes(y=height, x=Entity, label=p.adj_f), hjust=0.1, size=2.3, angle=45)+
     scale_fill_manual(values = colors_umap_cl)+
     scale_y_continuous(name="% of total T-cells", limits=c(0,ylim[i]))+
     scale_x_discrete(expand = c(0.17,0.17))+
@@ -139,7 +145,7 @@ for(i in c(1:7)){
 
 plot_freq <- wrap_plots(p, ncol = 1)
 plot_freq
-#ggsave(width = 9, height = 21, units = "cm", filename = "Figure3_p1.pdf")
+ggsave(width = 9, height = 21, units = "cm", filename = "Figure3_p1.pdf")
 
 ```
 

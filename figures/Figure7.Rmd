@@ -242,13 +242,17 @@ pvalues <- df_freq_nh %>%
   compare_means(data=., formula = Prop ~ Entity, ref.group = "rLN", 
                 group.by = "Region", p.adjust.method = "BH") %>% 
   filter(p.adj<0.07) %>% 
-  mutate(p.adj=round(p.adj, 2), Entity=group2) %>% 
-  mutate(p.adj=ifelse(p.adj==0, "< 0.01", as.character(p.adj))) %>% 
+  mutate(p.adj_s=format(p.adj, scientific = TRUE, digits=1)) %>% 
+  mutate(p.adj_f=case_when(p.adj > 0.01 ~ as.character(round(p.adj, 2)),
+                           p.adj==0.01 ~ "0.01",
+                           p.adj < 0.01 ~ p.adj_s),
+         Entity=group2) %>% 
+  filter(!is.na(p.adj)) %>% 
   mutate(Entity=factor(Entity, levels = c("rLN", "DLBCL", "MCL", "FL", "MZL"))) %>% 
   filter(Region %in% roi) %>% 
   mutate(Region=factor(Region, levels = roi)) %>% 
   arrange(Region,Entity) %>% 
-  mutate(Y=c(0.68,0.1,0.35,0.55,0.77,0.09,0.18,0.09)) %>% 
+  mutate(Y=c(0.68,0.1,0.35,0.55,0.77,0.09,0.20,0.09)) %>% 
   mutate(Region_nn=paste0("N", Region)) %>% 
   mutate(Region_nn=factor(Region_nn, levels = paste0("N", roi))) 
 
@@ -277,7 +281,7 @@ plot_freq_nn <- df_freq_nh %>%
              size=0.25, linetype="dashed", color="grey60")+
   geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
   ggbeeswarm::geom_beeswarm(size=0.8, shape=21, stroke=0.1, cex = 1.75, aes(fill=Region))+
-  geom_text(data=pvalues, inherit.aes = F, aes(y=Y, x=Entity, label=p.adj), size=2.5)+
+  geom_text(data=pvalues, inherit.aes = F, aes(y=Y, x=Entity, label=p.adj_f), size=2.5)+
   geom_point(data = d, alpha=0, aes(x=Entity, y=Y))+
   scale_fill_manual(values = colors_nn)+
   scale_x_discrete(limits=c("rLN", "DLBCL", "MCL", "FL", "MZL"))+
@@ -299,7 +303,7 @@ g$grobs[[25]]$grobs[[1]]$children[[1]]$gp$fill <- colors_nn["1"]
 
 plot_nn_rLN+wrap_ggplot_grob(g)+plot_layout(widths = c(1.6,1.2))
 
-#ggsave(width = 18.3, height = 6, units = "cm", filename = "Figure7_p4.pdf")
+ggsave(width = 18.3, height = 6, units = "cm", filename = "Figure7_p4.pdf")
 
 ```
 

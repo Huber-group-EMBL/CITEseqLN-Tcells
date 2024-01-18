@@ -43,7 +43,12 @@ pvalues <- df_freq_treg %>%
   group_by(IdentI) %>% 
   wilcox_test(data=., formula =  Prop ~ Entity, comparisons = list(c("FL", "rLN"), c("MZL", "rLN"))) %>% 
   select(IdentI, Entity=group1, p) %>% 
-  mutate(p = ifelse(p < 0.001, "< 0.001", as.character(p)))
+  mutate(p_s=format(p, scientific = TRUE, digits=1)) %>% 
+  mutate(p_f=case_when(p > 0.05 ~ "NA",
+                           p==0.05 ~ "0.05",
+                           p < 0.05 & p > 0.001 ~ as.character(round(p, 3)),
+                           p==0.001 ~ "0.001",
+                           p < 0.001 ~ p_s)) 
 
 p1 <- 
   df_freq_treg %>% 
@@ -52,7 +57,7 @@ p1 <-
   geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
   ggbeeswarm::geom_beeswarm(size=0.75, shape=21, stroke=0.25, cex = 2.25, aes(fill=Entity))+
   geom_text(inherit.aes = F, data = pvalues %>% filter(IdentI==6) %>% mutate(Y=c(38,45)),
-            aes(x=Entity, y=Y, label=p), size=2.5)+
+            aes(x=Entity, y=Y, label=p_f), size=2.5)+
   scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
   ggtitle(expression('T'[FH]))+
   scale_y_continuous(limits = c(0,60), name="% of total T-cells (CITE-seq)")+
@@ -75,7 +80,7 @@ p2 <-
   geom_boxplot(width=0.5, outlier.alpha = 0, size=0.25)+
   ggbeeswarm::geom_beeswarm(size=0.75, shape=21, stroke=0.25, cex = 2.25, aes(fill=Entity))+
   geom_text(inherit.aes = F, data = pvalues %>% filter(IdentI==11) %>% mutate(Y=c(16,17.5)),
-            aes(x=Entity, y=Y, label=p), size=2.5)+
+            aes(x=Entity, y=Y, label=p_f), size=2.5)+
   scale_fill_brewer(palette = "Paired", limits=c("DLBCL", "MCL", "FL", "MZL", "rLN"))+
   ggtitle(expression('T'[REG]~'EM'[2]))+
   scale_y_continuous(limits = c(0,18.25), name="% of total T-cells (CITE-seq)")+
@@ -160,7 +165,7 @@ for(i in 5:9) {
 ```{r assemble plot I, fig.height=2.5}
 
 p1+p2+p3+plot_layout(widths = c(1,1,1.45))
-#ggsave(width = 18.5, height = 5.8, units = "cm", filename = "Figure6_p1.pdf")
+ggsave(width = 18.5, height = 5.8, units = "cm", filename = "Figure6_p1.pdf")
 
 ```
 
